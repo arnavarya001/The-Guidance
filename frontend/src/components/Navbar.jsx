@@ -348,7 +348,35 @@ export default function Navbar({ onOpenAiDoubt, onOpenAiGuru }) {
               )}
             </div>
           ) : (
-            <div style={{ display: 'flex', gap: '8px' }}>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <button 
+                onClick={() => {
+                  const adminUser = {
+                    id: 'u_admin',
+                    name: 'Admin The Guidance',
+                    email: 'admin@theguidance.com',
+                    mobile: '9999999999',
+                    class: 'All',
+                    board: 'Bihar Board',
+                    role: 'admin'
+                  };
+                  localStorage.setItem('the_guidance_user', JSON.stringify(adminUser));
+                  localStorage.setItem('the_guidance_token', 'admin_session_' + Date.now());
+                  window.location.hash = '#admin';
+                  window.location.reload();
+                }} 
+                className="btn btn-sm desktop-nav"
+                style={{ 
+                  background: 'linear-gradient(135deg, #f59e0b, #d97706)', 
+                  color: 'white', 
+                  border: 'none', 
+                  fontWeight: 700,
+                  boxShadow: '0 2px 8px rgba(245, 158, 11, 0.3)'
+                }}
+                title="1-Click Admin Access"
+              >
+                👑 Admin
+              </button>
               <button onClick={() => navigateTo('#login')} className="btn btn-outline btn-sm">
                 {t('navLogin')}
               </button>
