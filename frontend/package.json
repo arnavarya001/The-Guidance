@@ -10,7 +10,14 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.112.3",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^17.4.2",
+    "express": "^4.19.2",
     "firebase": "^12.18.0",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
   },
