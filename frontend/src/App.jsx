@@ -23,7 +23,7 @@ import DailyChallenge from './pages/DailyChallenge';
 function AppFooter({ settings }) {
   const { t } = useLanguage();
   const ownerName = 'Abhay Kumar Singh';
-  const phone = settings?.phone || '+91 99349 91169';
+  const phone = settings?.phone || '+91 99348 81169';
   const email = settings?.email || 'siabhay17@gmail.com';
   const address = settings?.address || 'Bari Path, Near Patna College, Patna, Bihar - 800004';
   const coachingName = settings?.coachingName || 'THE GUIDANCE';
@@ -82,7 +82,7 @@ function AppFooter({ settings }) {
               </div>
               <div style={{ marginTop: '6px' }}>
                 <a
-                  href={`https://wa.me/919934991169?text=Hello%20Abhay%20Sir%2C%20I%20have%20an%20admission%20inquiry%20regarding%20The%20Guidance.`}
+                  href={`https://wa.me/919934881169?text=Hello%20Abhay%20Sir%2C%20I%20have%20an%20admission%20inquiry%20regarding%20The%20Guidance.`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="btn btn-sm"

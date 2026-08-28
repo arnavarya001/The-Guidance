@@ -218,32 +218,32 @@ export default function Navbar({ onOpenAiDoubt, onOpenAiGuru }) {
           )}
         </nav>
 
-        {/* Right Action Icons: Language, AI Guru, Theme, Auth */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        {/* Right Action Icons */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
           {/* Language Toggle */}
           <button
             onClick={toggleLanguage}
             className="btn btn-outline"
             style={{
-              padding: '6px 12px',
+              padding: '5px 10px',
               fontSize: '12px',
               display: 'flex',
               alignItems: 'center',
-              gap: '6px',
+              gap: '4px',
               borderRadius: '20px',
               borderColor: 'var(--border)'
             }}
             title="Toggle Hindi / English"
           >
             <span>🌐</span>
-            <span>{language === 'en' ? 'English' : 'हिंदी'}</span>
+            <span>{language === 'en' ? 'EN' : 'HI'}</span>
           </button>
 
-          {/* AI Guru Trigger Button */}
+          {/* AI Guru Trigger Button (Visible on desktop/tablet) */}
           {handleOpenAi && (
             <button
               onClick={handleOpenAi}
-              className="btn"
+              className="btn desktop-only"
               style={{
                 background: 'linear-gradient(135deg, var(--primary-light), var(--secondary-light))',
                 border: '1px solid var(--primary-glow)',
@@ -282,117 +282,72 @@ export default function Navbar({ onOpenAiDoubt, onOpenAiGuru }) {
             {theme === 'light' ? '🌙' : '☀️'}
           </button>
 
-          {/* User Auth Info / Buttons */}
-          {user ? (
-            <div style={{ position: 'relative' }}>
-              <div
-                onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  cursor: 'pointer',
-                  padding: '6px 12px',
-                  borderRadius: '10px',
-                  backgroundColor: 'var(--bg-card-hover)',
-                  border: '1px solid var(--border)'
-                }}
-              >
-                <div style={{
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '50%',
-                  backgroundColor: user.role === 'admin' ? '#f59e0b' : 'var(--primary)',
-                  color: 'white',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontWeight: 700,
-                  fontSize: '13px'
-                }}>
-                  {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', textAlign: 'left' }}>
-                  <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-dark)' }}>
-                    {user.name ? user.name.split(' ')[0] : 'Student'}
-                  </span>
-                  <span style={{ fontSize: '10px', color: 'var(--gray)', textTransform: 'capitalize' }}>
-                    {user.role === 'admin' ? '👑 Admin' : (user.class || 'Student')}
-                  </span>
-                </div>
-                <span style={{ fontSize: '10px', color: 'var(--gray)' }}>▼</span>
-              </div>
-
-              {/* Dropdown Menu */}
-              {userDropdownOpen && (
-                <div style={{
-                  position: 'absolute',
-                  right: 0,
-                  top: '110%',
-                  width: '220px',
-                  backgroundColor: 'var(--bg-card)',
-                  border: '1px solid var(--border)',
-                  borderRadius: '14px',
-                  boxShadow: 'var(--shadow-premium)',
-                  padding: '8px',
-                  zIndex: 200,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '4px'
-                }}>
-                  <div style={{ padding: '8px 12px', borderBottom: '1px solid var(--border)', marginBottom: '4px' }}>
-                    <div style={{ fontWeight: 700, fontSize: '14px' }}>{user.name}</div>
-                    <div style={{ fontSize: '12px', color: 'var(--gray)' }}>{user.email || user.mobile}</div>
+          {/* Desktop User Auth Info / Buttons */}
+          <div className="desktop-only">
+            {user ? (
+              <div style={{ position: 'relative' }}>
+                <div
+                  onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    cursor: 'pointer',
+                    padding: '6px 12px',
+                    borderRadius: '10px',
+                    backgroundColor: 'var(--bg-card-hover)',
+                    border: '1px solid var(--border)'
+                  }}
+                >
+                  <div style={{
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '50%',
+                    backgroundColor: user.role === 'admin' ? '#f59e0b' : 'var(--primary)',
+                    color: 'white',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: 700,
+                    fontSize: '13px'
+                  }}>
+                    {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
                   </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', textAlign: 'left' }}>
+                    <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-dark)' }}>
+                      {user.name ? user.name.split(' ')[0] : 'Student'}
+                    </span>
+                    <span style={{ fontSize: '10px', color: 'var(--gray)', textTransform: 'capitalize' }}>
+                      {user.role === 'admin' ? '👑 Admin' : (user.class || 'Student')}
+                    </span>
+                  </div>
+                  <span style={{ fontSize: '10px', color: 'var(--gray)' }}>▼</span>
+                </div>
 
-                  <button
-                    onClick={() => navigateTo('#dashboard')}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                      padding: '8px 12px',
-                      borderRadius: '8px',
-                      border: 'none',
-                      background: 'transparent',
-                      textAlign: 'left',
-                      cursor: 'pointer',
-                      fontSize: '13px',
-                      color: 'var(--text-dark)'
-                    }}
-                  >
-                    <span>📊</span> Student Profile & Results
-                  </button>
+                {/* Dropdown Menu */}
+                {userDropdownOpen && (
+                  <div style={{
+                    position: 'absolute',
+                    right: 0,
+                    top: '110%',
+                    width: '220px',
+                    backgroundColor: 'var(--bg-card)',
+                    border: '1px solid var(--border)',
+                    borderRadius: '14px',
+                    boxShadow: 'var(--shadow-premium)',
+                    padding: '8px',
+                    zIndex: 200,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '4px'
+                  }}>
+                    <div style={{ padding: '8px 12px', borderBottom: '1px solid var(--border)', marginBottom: '4px' }}>
+                      <div style={{ fontWeight: 700, fontSize: '14px' }}>{user.name}</div>
+                      <div style={{ fontSize: '12px', color: 'var(--gray)' }}>{user.email || user.mobile}</div>
+                    </div>
 
-                  {user.role === 'admin' && (
                     <button
-                      onClick={() => navigateTo('#admin')}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        padding: '8px 12px',
-                        borderRadius: '8px',
-                        border: 'none',
-                        background: 'rgba(245, 158, 11, 0.1)',
-                        textAlign: 'left',
-                        cursor: 'pointer',
-                        fontSize: '13px',
-                        color: '#d97706',
-                        fontWeight: 700
-                      }}
-                    >
-                      <span>👑</span> Admin Control Panel
-                    </button>
-                  )}
-
-                  <div style={{ borderTop: '1px solid var(--border)', marginTop: '4px', paddingTop: '4px' }}>
-                    <button
-                      onClick={() => {
-                        logout();
-                        setUserDropdownOpen(false);
-                        window.location.hash = '#home';
-                      }}
+                      onClick={() => navigateTo('#dashboard')}
                       style={{
                         display: 'flex',
                         alignItems: 'center',
@@ -404,34 +359,81 @@ export default function Navbar({ onOpenAiDoubt, onOpenAiGuru }) {
                         textAlign: 'left',
                         cursor: 'pointer',
                         fontSize: '13px',
-                        color: 'var(--danger)',
-                        width: '100%'
+                        color: 'var(--text-dark)'
                       }}
                     >
-                      <span>🚪</span> Logout
+                      <span>📊</span> Student Profile & Results
                     </button>
+
+                    {user.role === 'admin' && (
+                      <button
+                        onClick={() => navigateTo('#admin')}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          padding: '8px 12px',
+                          borderRadius: '8px',
+                          border: 'none',
+                          background: 'rgba(245, 158, 11, 0.1)',
+                          textAlign: 'left',
+                          cursor: 'pointer',
+                          fontSize: '13px',
+                          color: '#d97706',
+                          fontWeight: 700
+                        }}
+                      >
+                        <span>👑</span> Admin Control Panel
+                      </button>
+                    )}
+
+                    <div style={{ borderTop: '1px solid var(--border)', marginTop: '4px', paddingTop: '4px' }}>
+                      <button
+                        onClick={() => {
+                          logout();
+                          setUserDropdownOpen(false);
+                          window.location.hash = '#home';
+                        }}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          padding: '8px 12px',
+                          borderRadius: '8px',
+                          border: 'none',
+                          background: 'transparent',
+                          textAlign: 'left',
+                          cursor: 'pointer',
+                          fontSize: '13px',
+                          color: 'var(--danger)',
+                          width: '100%'
+                        }}
+                      >
+                        <span>🚪</span> Logout
+                      </button>
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <button
-                onClick={() => navigateTo('#login')}
-                className="btn btn-outline"
-                style={{ padding: '6px 14px', fontSize: '13px', borderRadius: '10px' }}
-              >
-                {t('navLogin')}
-              </button>
-              <button
-                onClick={() => navigateTo('#signup')}
-                className="btn btn-primary"
-                style={{ padding: '6px 14px', fontSize: '13px', borderRadius: '10px' }}
-              >
-                {t('navSignup')}
-              </button>
-            </div>
-          )}
+                )}
+              </div>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <button
+                  onClick={() => navigateTo('#login')}
+                  className="btn btn-outline"
+                  style={{ padding: '6px 14px', fontSize: '13px', borderRadius: '10px' }}
+                >
+                  {t('navLogin')}
+                </button>
+                <button
+                  onClick={() => navigateTo('#signup')}
+                  className="btn btn-primary"
+                  style={{ padding: '6px 14px', fontSize: '13px', borderRadius: '10px' }}
+                >
+                  {t('navSignup')}
+                </button>
+              </div>
+            )}
+          </div>
 
           {/* Mobile Hamburger Toggle Button */}
           <button
@@ -551,14 +553,14 @@ export default function Navbar({ onOpenAiDoubt, onOpenAiGuru }) {
             </div>
             <div style={{ display: 'flex', gap: '8px' }}>
               <a
-                href="tel:9934991169"
+                href="tel:9934881169"
                 className="btn btn-outline btn-sm"
                 style={{ flex: 1, padding: '6px', fontSize: '11px', textAlign: 'center', textDecoration: 'none' }}
               >
-                📞 Call Director
+                📞 Call: 9934881169
               </a>
               <a
-                href="https://wa.me/919934991169"
+                href="https://wa.me/919934881169"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn btn-sm"

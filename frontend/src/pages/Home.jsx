@@ -412,14 +412,14 @@ export default function Home({ onOpenAiDoubt, settings }) {
               </p>
               <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
                 <a
-                  href="tel:9934991169"
+                  href="tel:9934881169"
                   className="btn btn-primary btn-sm"
                   style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', textDecoration: 'none' }}
                 >
-                  📞 Call: +91 99349 91169
+                  📞 Call: +91 99348 81169
                 </a>
                 <a
-                  href="https://wa.me/919934991169?text=Hello%20Abhay%20Sir%2C%20I%20have%20an%20inquiry%20regarding%20The%20Guidance%20courses."
+                  href="https://wa.me/919934881169?text=Hello%20Abhay%20Sir%2C%20I%20have%20an%20inquiry%20regarding%20The%20Guidance%20courses."
                   target="_blank"
                   rel="noopener noreferrer"
                   className="btn btn-sm"
@@ -433,7 +433,7 @@ export default function Home({ onOpenAiDoubt, settings }) {
                     fontWeight: 700
                   }}
                 >
-                  💬 WhatsApp: 9934991169
+                  💬 WhatsApp: 9934881169
                 </a>
                 <a
                   href="mailto:siabhay17@gmail.com"
