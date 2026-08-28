@@ -800,6 +800,11 @@ h1, h2, h3, h4, h5, h6 {
   background: linear-gradient(180deg, rgba(217, 119, 6, 0.08) 0%, var(--bg-card) 60%);
 }
 
+/* Mobile Bottom App Bar */
+.mobile-bottom-app-bar {
+  display: none;
+}
+
 @media (max-width: 1024px) {
   .desktop-nav {
     display: none !important;
@@ -808,6 +813,15 @@ h1, h2, h3, h4, h5, h6 {
     display: flex !important;
     align-items: center;
     justify-content: center;
+  }
+  .mobile-bottom-app-bar {
+    display: flex !important;
+  }
+  body {
+    padding-bottom: 66px !important;
+  }
+  .floating-ai-btn {
+    bottom: 76px !important;
   }
   .grid-4 {
     grid-template-columns: repeat(2, 1fr) !important;

@@ -435,17 +435,21 @@ export default function Navbar({ onOpenAiDoubt, onOpenAiGuru }) {
 
           {/* Mobile Hamburger Toggle Button */}
           <button
+            type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="mobile-toggle"
             style={{
-              background: 'transparent',
-              border: 'none',
-              fontSize: '24px',
+              background: 'var(--bg-card-hover)',
+              border: '1.5px solid var(--border)',
+              borderRadius: '10px',
+              fontSize: '20px',
               cursor: 'pointer',
-              display: 'none',
-              padding: '4px',
-              color: 'var(--text-dark)'
+              padding: '6px 10px',
+              color: 'var(--text-dark)',
+              fontWeight: 800,
+              boxShadow: 'var(--shadow-sm)'
             }}
+            title="Open Mobile Navigation Menu"
           >
             {mobileMenuOpen ? '✕' : '☰'}
           </button>
@@ -461,7 +465,9 @@ export default function Navbar({ onOpenAiDoubt, onOpenAiGuru }) {
           display: 'flex',
           flexDirection: 'column',
           gap: '8px',
-          boxShadow: 'var(--shadow-lg)'
+          boxShadow: '0 20px 35px rgba(0, 0, 0, 0.15)',
+          maxHeight: 'calc(100vh - 72px)',
+          overflowY: 'auto'
         }}>
           {navLinks.map(link => (
             <div
@@ -526,6 +532,42 @@ export default function Navbar({ onOpenAiDoubt, onOpenAiGuru }) {
               <span>Admin Panel</span>
             </div>
           )}
+
+          {/* Director & Leadership Info Card in Mobile Drawer */}
+          <div style={{
+            backgroundColor: 'var(--bg-card-hover)',
+            border: '1px solid var(--border)',
+            borderRadius: '12px',
+            padding: '14px',
+            marginTop: '8px',
+            fontSize: '12px'
+          }}>
+            <div style={{ fontWeight: 800, color: 'var(--text-dark)', marginBottom: '4px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span>👑</span>
+              <span>Director: Abhay Kumar Singh</span>
+            </div>
+            <div style={{ color: 'var(--gray)', marginBottom: '8px' }}>
+              The Guidance Coaching Institute, Patna
+            </div>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <a
+                href="tel:9934991169"
+                className="btn btn-outline btn-sm"
+                style={{ flex: 1, padding: '6px', fontSize: '11px', textAlign: 'center', textDecoration: 'none' }}
+              >
+                📞 Call Director
+              </a>
+              <a
+                href="https://wa.me/919934991169"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-sm"
+                style={{ flex: 1, padding: '6px', fontSize: '11px', textAlign: 'center', backgroundColor: '#10b981', color: 'white', textDecoration: 'none', fontWeight: 700 }}
+              >
+                💬 WhatsApp
+              </a>
+            </div>
+          </div>
 
           {/* Mobile Drawer Bottom Quick Action Bar */}
           <div style={{

@@ -363,6 +363,91 @@ export default function Home({ onOpenAiDoubt, settings }) {
         </div>
       </section>
 
+      {/* Institute Leadership & Director Section */}
+      <section className="section" style={{ backgroundColor: 'var(--bg-card-hover)', borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)' }}>
+        <div className="container" style={{ maxWidth: '900px' }}>
+          <div className="card glass-card" style={{
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: '24px',
+            padding: '32px',
+            flexWrap: 'wrap'
+          }}>
+            <div style={{
+              width: '80px',
+              height: '80px',
+              borderRadius: '50%',
+              background: 'linear-gradient(135deg, #1e40af, #7c3aed)',
+              color: 'white',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '36px',
+              boxShadow: '0 8px 20px rgba(37, 99, 235, 0.35)',
+              flexShrink: 0
+            }}>
+              👨‍🏫
+            </div>
+            <div style={{ flex: '1 1 300px' }}>
+              <div style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                backgroundColor: 'rgba(245, 158, 11, 0.15)',
+                color: '#d97706',
+                padding: '3px 10px',
+                borderRadius: '6px',
+                fontSize: '11px',
+                fontWeight: 700,
+                marginBottom: '6px'
+              }}>
+                👑 Coaching Director & Founder
+              </div>
+              <h2 style={{ fontSize: '24px', fontWeight: 800, margin: '0 0 6px 0', color: 'var(--text-dark)' }}>
+                Abhay Kumar Singh
+              </h2>
+              <p style={{ fontSize: '14px', color: 'var(--gray)', lineHeight: 1.6, margin: '0 0 16px 0' }}>
+                Dedicated to guiding Bihar Board & CBSE students to state-topping ranks with personalized mentorship, comprehensive study materials, and rigorous testing.
+              </p>
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                <a
+                  href="tel:9934991169"
+                  className="btn btn-primary btn-sm"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', textDecoration: 'none' }}
+                >
+                  📞 Call: +91 99349 91169
+                </a>
+                <a
+                  href="https://wa.me/919934991169?text=Hello%20Abhay%20Sir%2C%20I%20have%20an%20inquiry%20regarding%20The%20Guidance%20courses."
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-sm"
+                  style={{
+                    backgroundColor: '#10b981',
+                    color: 'white',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    textDecoration: 'none',
+                    fontWeight: 700
+                  }}
+                >
+                  💬 WhatsApp: 9934991169
+                </a>
+                <a
+                  href="mailto:siabhay17@gmail.com"
+                  className="btn btn-outline btn-sm"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', textDecoration: 'none' }}
+                >
+                  ✉️ siabhay17@gmail.com
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="section" style={{
         background: 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)',

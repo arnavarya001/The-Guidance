@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import Navbar from './components/Navbar';
+import MobileBottomNav from './components/MobileBottomNav';
 import AiDoubtModal from './components/AiDoubtModal';
 
 // Pages
@@ -21,8 +22,9 @@ import DailyChallenge from './pages/DailyChallenge';
 
 function AppFooter({ settings }) {
   const { t } = useLanguage();
-  const phone = settings?.phone || '+91 98765 43210';
-  const email = settings?.email || 'contact@theguidance.com';
+  const ownerName = 'Abhay Kumar Singh';
+  const phone = settings?.phone || '+91 99349 91169';
+  const email = settings?.email || 'siabhay17@gmail.com';
   const address = settings?.address || 'Bari Path, Near Patna College, Patna, Bihar - 800004';
   const coachingName = settings?.coachingName || 'THE GUIDANCE';
 
@@ -30,7 +32,7 @@ function AppFooter({ settings }) {
     <footer style={{
       background: 'var(--dark)',
       color: 'white',
-      padding: '48px 24px 32px',
+      padding: '48px 24px 80px',
       marginTop: 'auto',
       borderTop: '1px solid var(--border)'
     }}>
@@ -41,18 +43,65 @@ function AppFooter({ settings }) {
           gap: '36px',
           marginBottom: '36px'
         }}>
-          {/* Brand Info */}
+          {/* Brand & Leadership Info */}
           <div>
-            <h3 style={{ color: 'white', marginBottom: '12px', fontWeight: 800, fontSize: '20px' }}>
+            <h3 style={{ color: 'white', marginBottom: '8px', fontWeight: 800, fontSize: '20px' }}>
               {coachingName}
             </h3>
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              backgroundColor: 'rgba(245, 158, 11, 0.15)',
+              border: '1px solid rgba(245, 158, 11, 0.3)',
+              color: '#f59e0b',
+              padding: '4px 10px',
+              borderRadius: '8px',
+              fontSize: '12px',
+              fontWeight: 700,
+              marginBottom: '12px'
+            }}>
+              👑 Director & Founder: {ownerName}
+            </div>
             <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '13px', lineHeight: 1.6, marginBottom: '16px' }}>
               {settings?.coachingDesc || t('footerDesc')}
             </p>
-            <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.6)', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.85)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <div>📍 {address}</div>
-              <div>📞 {phone}</div>
-              <div>✉️ {email}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span>📞</span>
+                <a href={`tel:${phone.replace(/\s+/g, '')}`} style={{ color: '#60a5fa', textDecoration: 'none', fontWeight: 600 }}>
+                  {phone}
+                </a>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span>✉️</span>
+                <a href={`mailto:${email}`} style={{ color: '#60a5fa', textDecoration: 'none', fontWeight: 600 }}>
+                  {email}
+                </a>
+              </div>
+              <div style={{ marginTop: '6px' }}>
+                <a
+                  href={`https://wa.me/919934991169?text=Hello%20Abhay%20Sir%2C%20I%20have%20an%20admission%20inquiry%20regarding%20The%20Guidance.`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-sm"
+                  style={{
+                    backgroundColor: '#10b981',
+                    color: 'white',
+                    padding: '6px 14px',
+                    borderRadius: '8px',
+                    fontSize: '12px',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    textDecoration: 'none',
+                    fontWeight: 700
+                  }}
+                >
+                  💬 WhatsApp Director
+                </a>
+              </div>
             </div>
           </div>
 
@@ -249,6 +298,11 @@ function AppContent() {
         isOpen={isAiDoubtOpen}
         onClose={() => setIsAiDoubtOpen(false)}
       />
+
+      {/* Native Mobile Bottom Navigation App Bar */}
+      {route.page !== 'test-engine' && (
+        <MobileBottomNav onOpenAiGuru={() => setIsAiDoubtOpen(true)} />
+      )}
 
       {route.page !== 'test-engine' && <AppFooter settings={settings} />}
     </>
