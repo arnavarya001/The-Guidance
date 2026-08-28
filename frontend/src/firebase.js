@@ -1,6 +1,7 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { getFirestore } from "firebase/firestore";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
 
 // Firebase configuration for 'The Guidance'
 const firebaseConfig = {
@@ -17,6 +18,35 @@ const firebaseConfig = {
 const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 export const storage = getStorage(app);
 export const db = getFirestore(app);
+export const auth = getAuth(app);
+export const googleProvider = new GoogleAuthProvider();
+
+/**
+ * Sign in with Google Popup
+ * @returns {Promise<{user: object, token: string}>}
+ */
+export const signInWithGooglePopup = async () => {
+  try {
+    const result = await signInWithPopup(auth, googleProvider);
+    const user = result.user;
+    const token = await user.getIdToken();
+    return {
+      user: {
+        id: user.uid,
+        name: user.displayName || 'Google User',
+        email: user.email,
+        photoURL: user.photoURL,
+        class: 'c_10',
+        board: 'Bihar Board',
+        role: user.email === 'admin@theguidance.com' || user.email === 'singharnav5577@gmail.com' ? 'admin' : 'student'
+      },
+      token
+    };
+  } catch (error) {
+    console.error("Google Sign-In Error:", error);
+    throw error;
+  }
+};
 
 /**
  * Uploads a PDF file directly to Firebase Storage with progress tracking
