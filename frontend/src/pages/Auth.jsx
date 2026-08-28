@@ -1,0 +1,411 @@
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
+
+export default function Auth({ mode = 'login' }) {
+  const { login } = useAuth();
+  const [authMode, setAuthMode] = useState(mode); // 'login' | 'signup' | 'forgot'
+  const [classes, setClasses] = useState([]);
+  
+  // Form fields
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [mobile, setMobile] = useState('');
+  const [password, setPassword] = useState('');
+  const [classId, setClassId] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+
+  // Status
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    setAuthMode(mode);
+    setError('');
+    setSuccess('');
+  }, [mode]);
+
+  useEffect(() => {
+    // Load classes list for dropdown
+    const fetchClasses = async () => {
+      try {
+        const res = await fetch('/api/courses/classes');
+        if (res.ok) {
+          const data = await res.json();
+          setClasses(data);
+          if (data.length > 0) setClassId(data[5]?.id || data[0].id); // default to Class 10 if exists
+        }
+      } catch (e) {
+        console.error("Failed to load classes", e);
+      }
+    };
+    fetchClasses();
+  }, []);
+
+  const handleLoginSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+    setLoading(true);
+
+    if (!email || !password) {
+      setError('Please fill in all fields.');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      
+      if (res.ok) {
+        setSuccess('Logged in successfully!');
+        setTimeout(() => {
+          login(data.user, data.token);
+          window.location.hash = '#dashboard';
+        }, 800);
+      } else {
+        setError(data.message || 'Login failed.');
+      }
+    } catch (err) {
+      setError('Could not connect to the authentication server.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRegisterSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+    setLoading(true);
+
+    if (!name || !email || !mobile || !password || !classId) {
+      setError('Please fill in all fields.');
+      setLoading(false);
+      return;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError('Please enter a valid email address.');
+      setLoading(false);
+      return;
+    }
+
+    if (!/^\d{10}$/.test(mobile)) {
+      setError('Please enter a valid 10-digit mobile number.');
+      setLoading(false);
+      return;
+    }
+
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters long.');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name,
+          email,
+          mobile,
+          password,
+          classId,
+          board: 'Bihar Board'
+        })
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        setSuccess('Account created successfully!');
+        setTimeout(() => {
+          login(data.user, data.token);
+          window.location.hash = '#dashboard';
+        }, 800);
+      } else {
+        setError(data.message || 'Registration failed.');
+      }
+    } catch (err) {
+      setError('Could not connect to the server.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleForgotSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+    setLoading(true);
+
+    if (!email || !mobile || !newPassword) {
+      setError('All fields are required.');
+      setLoading(false);
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      setError('Password must be at least 6 characters.');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, mobile, newPassword })
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        setSuccess('Password updated successfully! You can now log in.');
+        setTimeout(() => {
+          setAuthMode('login');
+        }, 1500);
+      } else {
+        setError(data.message || 'Password reset failed.');
+      }
+    } catch (err) {
+      setError('Could not connect to server.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <section className="section" style={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: 'calc(100vh - 72px)',
+      background: 'radial-gradient(circle at top, var(--primary-light) 0%, var(--bg) 100%)'
+    }}>
+      <div className="card glass" style={{
+        width: '100%',
+        maxWidth: '480px',
+        padding: '40px',
+        borderRadius: '20px',
+        boxShadow: 'var(--shadow-premium)'
+      }}>
+        {/* Header Toggle */}
+        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+          <h2 style={{ fontSize: '28px', marginBottom: '8px' }}>
+            {authMode === 'login' && 'Welcome Back'}
+            {authMode === 'signup' && 'Create Your Account'}
+            {authMode === 'forgot' && 'Reset Password'}
+          </h2>
+          <p style={{ color: 'var(--gray)', fontSize: '14px' }}>
+            {authMode === 'login' && 'Access Bihar Board materials and test papers'}
+            {authMode === 'signup' && 'Sign up to build performance metrics'}
+            {authMode === 'forgot' && 'Confirm details to update password'}
+          </p>
+        </div>
+
+        {error && <div className="alert alert-error" style={{ fontSize: '14px' }}>⚠️ {error}</div>}
+        {success && <div className="alert alert-success" style={{ fontSize: '14px' }}>✅ {success}</div>}
+
+        {/* LOGIN FORM */}
+        {authMode === 'login' && (
+          <form onSubmit={handleLoginSubmit}>
+            <div className="form-group">
+              <label className="form-label">Email Address</label>
+              <input 
+                type="email" 
+                className="form-control" 
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder="example@gmail.com" 
+                required 
+              />
+            </div>
+            
+            <div className="form-group">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                <label className="form-label" style={{ marginBottom: 0 }}>Password</label>
+                <span 
+                  onClick={() => setAuthMode('forgot')} 
+                  style={{ fontSize: '13px', color: 'var(--primary)', fontWeight: 600, cursor: 'pointer' }}
+                >
+                  Forgot Password?
+                </span>
+              </div>
+              <input 
+                type="password" 
+                className="form-control" 
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                placeholder="Enter password" 
+                required 
+              />
+            </div>
+
+            <button type="submit" disabled={loading} className="btn btn-primary" style={{ width: '100%', marginTop: '10px' }}>
+              {loading ? 'Logging in...' : 'Sign In'}
+            </button>
+
+            <div style={{ marginTop: '24px', textAlign: 'center', fontSize: '14px' }}>
+              Don't have an account?{' '}
+              <span 
+                onClick={() => setAuthMode('signup')} 
+                style={{ color: 'var(--primary)', fontWeight: 700, cursor: 'pointer' }}
+              >
+                Sign Up Free
+              </span>
+            </div>
+          </form>
+        )}
+
+        {/* SIGNUP FORM */}
+        {authMode === 'signup' && (
+          <form onSubmit={handleRegisterSubmit}>
+            <div className="form-group">
+              <label className="form-label">Full Name</label>
+              <input 
+                type="text" 
+                className="form-control" 
+                value={name}
+                onChange={e => setName(e.target.value)}
+                placeholder="Aarav Kumar" 
+                required 
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Email Address</label>
+              <input 
+                type="email" 
+                className="form-control" 
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder="aarav@gmail.com" 
+                required 
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Mobile Number</label>
+              <input 
+                type="tel" 
+                className="form-control" 
+                value={mobile}
+                onChange={e => setMobile(e.target.value)}
+                placeholder="9876543210 (10 digits)" 
+                required 
+              />
+            </div>
+
+            <div className="grid-2">
+              <div className="form-group">
+                <label className="form-label">Class</label>
+                <select 
+                  className="form-control form-select"
+                  value={classId}
+                  onChange={e => setClassId(e.target.value)}
+                  required
+                >
+                  {classes.map(c => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Board</label>
+                <input type="text" className="form-control" value="Bihar Board (BSEB)" disabled />
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Password</label>
+              <input 
+                type="password" 
+                className="form-control" 
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                placeholder="Min 6 characters" 
+                required 
+              />
+            </div>
+
+            <button type="submit" disabled={loading} className="btn btn-primary" style={{ width: '100%', marginTop: '10px' }}>
+              {loading ? 'Creating account...' : 'Create Account'}
+            </button>
+
+            <div style={{ marginTop: '24px', textAlign: 'center', fontSize: '14px' }}>
+              Already registered?{' '}
+              <span 
+                onClick={() => setAuthMode('login')} 
+                style={{ color: 'var(--primary)', fontWeight: 700, cursor: 'pointer' }}
+              >
+                Sign In
+              </span>
+            </div>
+          </form>
+        )}
+
+        {/* FORGOT PASSWORD FORM */}
+        {authMode === 'forgot' && (
+          <form onSubmit={handleForgotSubmit}>
+            <div className="form-group">
+              <label className="form-label">Registered Email</label>
+              <input 
+                type="email" 
+                className="form-control" 
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder="yourname@gmail.com" 
+                required 
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Registered Mobile Number</label>
+              <input 
+                type="tel" 
+                className="form-control" 
+                value={mobile}
+                onChange={e => setMobile(e.target.value)}
+                placeholder="10 digit number" 
+                required 
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">New Password</label>
+              <input 
+                type="password" 
+                className="form-control" 
+                value={newPassword}
+                onChange={e => setNewPassword(e.target.value)}
+                placeholder="Min 6 characters" 
+                required 
+              />
+            </div>
+
+            <button type="submit" disabled={loading} className="btn btn-primary" style={{ width: '100%', marginTop: '10px' }}>
+              {loading ? 'Updating password...' : 'Update Password'}
+            </button>
+
+            <div style={{ marginTop: '24px', textAlign: 'center', fontSize: '14px' }}>
+              Remember password?{' '}
+              <span 
+                onClick={() => setAuthMode('login')} 
+                style={{ color: 'var(--primary)', fontWeight: 700, cursor: 'pointer' }}
+              >
+                Back to Sign In
+              </span>
+            </div>
+          </form>
+        )}
+      </div>
+    </section>
+  );
+}

@@ -1,0 +1,599 @@
+{
+  "users": [
+    {
+      "id": "u_admin",
+      "name": "Admin The Guidance",
+      "email": "admin@theguidance.com",
+      "mobile": "9999999999",
+      "password": "$2a$10$yGSFMsELAWKFycxeNkek1efPkPa2I.0fZojgOMmPy0wLBgWWIphE.",
+      "class": "All",
+      "board": "Bihar Board",
+      "role": "admin",
+      "created_at": "2026-08-10T16:10:04.644Z"
+    },
+    {
+      "id": "u_student1",
+      "name": "Aarav Kumar",
+      "email": "aarav@gmail.com",
+      "mobile": "9876543210",
+      "password": "$2a$10$55J3zUlTCQhYwKIgyzTmvuosnAAmhK9qubWYY38ZrcOUa4cOt1W9u",
+      "class": "10",
+      "board": "Bihar Board",
+      "role": "student",
+      "created_at": "2026-08-10T16:10:04.645Z"
+    },
+    {
+      "id": "u_1786378631499",
+      "name": "Arnav Arya",
+      "email": "singharnav5577@gmail.com",
+      "mobile": "7764076583",
+      "password": "$2a$10$lcz1jSGGFSg.U1TWRXyExuKX61e2QwqJDiZsecwG1iHzTRxGBW7Tm",
+      "class": "c_12_science",
+      "board": "Bihar Board",
+      "role": "student",
+      "created_at": "2026-08-10T16:17:11.586Z"
+    }
+  ],
+  "classes": [
+    {
+      "id": "c_5",
+      "name": "Class 5"
+    },
+    {
+      "id": "c_6",
+      "name": "Class 6"
+    },
+    {
+      "id": "c_7",
+      "name": "Class 7"
+    },
+    {
+      "id": "c_8",
+      "name": "Class 8"
+    },
+    {
+      "id": "c_9",
+      "name": "Class 9"
+    },
+    {
+      "id": "c_10",
+      "name": "Class 10"
+    },
+    {
+      "id": "c_11_science",
+      "name": "Class 11 (Science)",
+      "stream": "Science"
+    },
+    {
+      "id": "c_11_commerce",
+      "name": "Class 11 (Commerce)",
+      "stream": "Commerce"
+    },
+    {
+      "id": "c_11_arts",
+      "name": "Class 11 (Arts)",
+      "stream": "Arts"
+    },
+    {
+      "id": "c_12_science",
+      "name": "Class 12 (Science)",
+      "stream": "Science"
+    },
+    {
+      "id": "c_12_commerce",
+      "name": "Class 12 (Commerce)",
+      "stream": "Commerce"
+    },
+    {
+      "id": "c_12_arts",
+      "name": "Class 12 (Arts)",
+      "stream": "Arts"
+    }
+  ],
+  "subjects": [
+    {
+      "id": "s_10_math",
+      "class_id": "c_10",
+      "name": "Mathematics",
+      "hindi_name": "गणित"
+    },
+    {
+      "id": "s_10_science",
+      "class_id": "c_10",
+      "name": "Science",
+      "hindi_name": "विज्ञान"
+    },
+    {
+      "id": "s_10_social",
+      "class_id": "c_10",
+      "name": "Social Science",
+      "hindi_name": "सामाजिक विज्ञान"
+    },
+    {
+      "id": "s_10_hindi",
+      "class_id": "c_10",
+      "name": "Hindi",
+      "hindi_name": "हिन्दी"
+    },
+    {
+      "id": "s_10_english",
+      "class_id": "c_10",
+      "name": "English",
+      "hindi_name": "अंग्रेजी"
+    },
+    {
+      "id": "s_12_physics",
+      "class_id": "c_12_science",
+      "name": "Physics",
+      "hindi_name": "भौतिक विज्ञान"
+    },
+    {
+      "id": "s_12_chemistry",
+      "class_id": "c_12_science",
+      "name": "Chemistry",
+      "hindi_name": "रसायन विज्ञान"
+    },
+    {
+      "id": "s_12_math",
+      "class_id": "c_12_science",
+      "name": "Mathematics",
+      "hindi_name": "गणित"
+    },
+    {
+      "id": "s_12_biology",
+      "class_id": "c_12_science",
+      "name": "Biology",
+      "hindi_name": "जीव विज्ञान"
+    },
+    {
+      "id": "s_12_english",
+      "class_id": "c_12_science",
+      "name": "English",
+      "hindi_name": "अंग्रेजी"
+    },
+    {
+      "id": "s_8_math",
+      "class_id": "c_8",
+      "name": "Mathematics",
+      "hindi_name": "गणित"
+    },
+    {
+      "id": "s_8_science",
+      "class_id": "c_8",
+      "name": "Science",
+      "hindi_name": "विज्ञान"
+    }
+  ],
+  "chapters": [
+    {
+      "id": "ch_10_math_1",
+      "subject_id": "s_10_math",
+      "name": "Real Numbers",
+      "hindi_name": "वास्तविक संख्याएँ",
+      "number": 1
+    },
+    {
+      "id": "ch_10_math_2",
+      "subject_id": "s_10_math",
+      "name": "Polynomials",
+      "hindi_name": "बहुपद",
+      "number": 2
+    },
+    {
+      "id": "ch_10_math_8",
+      "subject_id": "s_10_math",
+      "name": "Introduction to Trigonometry",
+      "hindi_name": "त्रिकोणमिति का परिचय",
+      "number": 8
+    },
+    {
+      "id": "ch_10_sci_1",
+      "subject_id": "s_10_science",
+      "name": "Chemical Reactions and Equations",
+      "hindi_name": "रासायनिक अभिक्रियाएँ एवं समीकरण",
+      "number": 1
+    },
+    {
+      "id": "ch_10_sci_6",
+      "subject_id": "s_10_science",
+      "name": "Life Processes",
+      "hindi_name": "जैव प्रक्रम",
+      "number": 6
+    },
+    {
+      "id": "ch_12_phy_1",
+      "subject_id": "s_12_physics",
+      "name": "Electric Charges and Fields",
+      "hindi_name": "वैद्युत आवेश तथा क्षेत्र",
+      "number": 1
+    }
+  ],
+  "study_materials": [
+    {
+      "id": "sm_1",
+      "chapter_id": "ch_10_math_1",
+      "type": "notes",
+      "title": "Real Numbers Complete Revision Notes",
+      "content": "### Chapter 1: Real Numbers (वास्तविक संख्याएँ) - Key Concepts\n\n#### 1. Euclid's Division Lemma\nGiven positive integers $a$ and $b$, there exist unique integers $q$ and $r$ satisfying:\n$$a = bq + r, \\quad 0 \\le r < b$$\nWhere $q$ is the quotient and $r$ is the remainder.\n\n#### 2. Fundamental Theorem of Arithmetic\nEvery composite number can be expressed (factorized) as a product of primes, and this factorization is unique, apart from the order in which the prime factors occur.\n$$\\text{Composite Number} = P_1 \\times P_2 \\times P_3 \\dots$$\n\n#### 3. Rational and Irrational Numbers\n- **Rational Numbers**: Expressible in the form $p/q$, where $p, q \\in \\mathbb{Z}$ and $q \\ne 0$. Decimal expansion is either terminating or non-terminating repeating.\n- **Irrational Numbers**: Cannot be expressed in $p/q$ form. For example, $\\sqrt{2}$, $\\sqrt{3}$, $\\pi$. Decimal expansion is non-terminating and non-repeating.\n- **Important Theorem**: If $p$ is a prime number and $p$ divides $a^2$, then $p$ divides $a$, where $a$ is a positive integer.\n\n#### 4. Relation between HCF and LCM\nFor any two positive integers $a$ and $b$:\n$$\\text{HCF}(a, b) \\times \\text{LCM}(a, b) = a \\times b$$",
+      "pdf_url": ""
+    },
+    {
+      "id": "sm_2",
+      "chapter_id": "ch_10_math_1",
+      "type": "formulas",
+      "title": "Real Numbers Formula Sheet",
+      "content": "### Key Formulas and Relationships - Real Numbers\n\n1. **Euclid's Algorithm**:\n   Used to find the HCF of two numbers. Repeat division until remainder $r = 0$. The divisor at that stage is the HCF.\n   \n2. **Product Formula**:\n   `HCF(a, b) * LCM(a, b) = a * b`\n   - Note: This only holds true for two numbers, not for three or more.\n\n3. **Co-prime Numbers**:\n   Two numbers $a$ and $b$ are co-prime if `HCF(a, b) = 1`.\n\n4. **Rational Terminating Condition**:\n   Let $x = p/q$ be a rational number. If the prime factorization of $q$ is of the form $2^n 5^m$, where $n, m$ are non-negative integers, then $x$ has a terminating decimal expansion.",
+      "pdf_url": ""
+    },
+    {
+      "id": "sm_3",
+      "chapter_id": "ch_10_sci_1",
+      "type": "notes",
+      "title": "Chemical Reactions Notes",
+      "content": "### Chemical Reactions and Equations (रासायनिक अभिक्रियाएँ एवं समीकरण)\n\n#### 1. Chemical Reaction\nA process in which one or more substances react to form new substances with entirely different properties.\n- **Indicators**: Change in state, change in color, evolution of a gas, change in temperature.\n\n#### 2. Chemical Equation\nThe symbolic representation of a chemical reaction using symbols and chemical formulas of the reactants and products.\n\n#### 3. Balanced Chemical Equation\nAn equation where the number of atoms of each element is equal on both the reactant and product sides. This satisfies the **Law of Conservation of Mass** (mass can neither be created nor destroyed in a chemical reaction).\n\n#### 4. Types of Chemical Reactions\n- **Combination Reaction**: Two or more reactants combine to form a single product.\n  $$CaO(s) + H_2O(l) \\rightarrow Ca(OH)_2(aq) + \\text{Heat}$$\n- **Decomposition Reaction**: A single reactant breaks down into two or more simpler products. Can be thermal, electrolytic, or photolytic.\n  $$2FeSO_4(s) \\xrightarrow{\\text{Heat}} Fe_2O_3(s) + SO_2(g) + SO_3(g)$$\n- **Displacement Reaction**: A more reactive element displaces a less reactive element from its salt solution.\n  $$Fe(s) + CuSO_4(aq) \\rightarrow FeSO_4(aq) + Cu(s)$$\n- **Double Displacement Reaction**: Mutual exchange of ions between reactants takes place.\n  $$Na_2SO_4(aq) + BaCl_2(aq) \\rightarrow BaSO_4(s) \\downarrow + 2NaCl(aq)$$\n- **Oxidation & Reduction (Redox)**:\n  - **Oxidation**: Addition of oxygen or removal of hydrogen.\n  - **Reduction**: Removal of oxygen or addition of hydrogen.",
+      "pdf_url": ""
+    }
+  ],
+  "questions": [
+    {
+      "id": "q_1",
+      "class_id": "c_10",
+      "subject_id": "s_10_math",
+      "chapter_id": "ch_10_math_1",
+      "type": "objective",
+      "question_text": "For any two positive integers a and b, which of the following is correct?",
+      "options": [
+        "HCF(a, b) + LCM(a, b) = a * b",
+        "HCF(a, b) / LCM(a, b) = a * b",
+        "HCF(a, b) * LCM(a, b) = a * b",
+        "HCF(a, b) * LCM(a, b) = a + b"
+      ],
+      "correct_answer": 2,
+      "explanation": "For any two positive integers a and b, the product of their HCF and LCM is equal to the product of the numbers: HCF(a, b) * LCM(a, b) = a * b.",
+      "marks": 1,
+      "negative_marks": 0,
+      "difficulty": "Easy",
+      "year": 2024,
+      "category": "pyq"
+    },
+    {
+      "id": "q_2",
+      "class_id": "c_10",
+      "subject_id": "s_10_math",
+      "chapter_id": "ch_10_math_1",
+      "type": "objective",
+      "question_text": "Which of the following is an irrational number?",
+      "options": [
+        "√9",
+        "√8",
+        "0.3796",
+        "2/3"
+      ],
+      "correct_answer": 1,
+      "explanation": "√9 = 3 (rational), 0.3796 is terminating (rational), 2/3 is in p/q form (rational). √8 = 2√2, which cannot be expressed as p/q, hence it is irrational.",
+      "marks": 1,
+      "negative_marks": 0,
+      "difficulty": "Easy",
+      "year": 2024,
+      "category": "pyq"
+    },
+    {
+      "id": "q_3",
+      "class_id": "c_10",
+      "subject_id": "s_10_math",
+      "chapter_id": "ch_10_math_1",
+      "type": "objective",
+      "question_text": "What is the HCF of two consecutive even numbers?",
+      "options": [
+        "1",
+        "2",
+        "4",
+        "None of these"
+      ],
+      "correct_answer": 1,
+      "explanation": "Any two consecutive even numbers can be written as 2n and 2n+2. Their difference is 2, and since they are both even, their greatest common divisor (HCF) is always 2. For example, HCF(4, 6) = 2.",
+      "marks": 1,
+      "negative_marks": 0,
+      "difficulty": "Medium",
+      "year": 2023,
+      "category": "pyq"
+    },
+    {
+      "id": "q_4",
+      "class_id": "c_10",
+      "subject_id": "s_10_math",
+      "chapter_id": "ch_10_math_1",
+      "type": "objective",
+      "question_text": "If the HCF of two numbers is 15 and their LCM is 300, what is the product of the numbers?",
+      "options": [
+        "4500",
+        "3000",
+        "1500",
+        "20"
+      ],
+      "correct_answer": 0,
+      "explanation": "Product of numbers = HCF * LCM = 15 * 300 = 4500.",
+      "marks": 1,
+      "negative_marks": 0,
+      "difficulty": "Easy",
+      "year": 2022,
+      "category": "chapter_test"
+    },
+    {
+      "id": "q_5",
+      "class_id": "c_10",
+      "subject_id": "s_10_math",
+      "chapter_id": "ch_10_math_1",
+      "type": "objective",
+      "question_text": "The exponent of 2 in the prime factorization of 144 is:",
+      "options": [
+        "3",
+        "4",
+        "5",
+        "6"
+      ],
+      "correct_answer": 1,
+      "explanation": "144 = 16 * 9 = 2^4 * 3^2. Therefore, the exponent of 2 is 4.",
+      "marks": 1,
+      "negative_marks": 0,
+      "difficulty": "Medium",
+      "year": 2023,
+      "category": "pyq"
+    },
+    {
+      "id": "q_6",
+      "class_id": "c_10",
+      "subject_id": "s_10_science",
+      "chapter_id": "ch_10_sci_1",
+      "type": "objective",
+      "question_text": "Which of the following is a displacement reaction?",
+      "options": [
+        "CaCO3 → CaO + CO2",
+        "2H2 + O2 → 2H2O",
+        "Fe + CuSO4 → FeSO4 + Cu",
+        "NaOH + HCl → NaCl + H2O"
+      ],
+      "correct_answer": 2,
+      "explanation": "In Fe + CuSO4 → FeSO4 + Cu, Iron (Fe) is more reactive than copper (Cu) and displaces it from its copper sulphate solution. This is a single displacement reaction.",
+      "marks": 1,
+      "negative_marks": 0,
+      "difficulty": "Easy",
+      "year": 2024,
+      "category": "pyq"
+    },
+    {
+      "id": "q_7",
+      "class_id": "c_10",
+      "subject_id": "s_10_science",
+      "chapter_id": "ch_10_sci_1",
+      "type": "objective",
+      "question_text": "The reaction of burning magnesium ribbon in air is an example of which type of reaction?",
+      "options": [
+        "Decomposition",
+        "Combination",
+        "Displacement",
+        "Double Displacement"
+      ],
+      "correct_answer": 1,
+      "explanation": "Magnesium reacts with oxygen in air to form magnesium oxide: 2Mg + O2 → 2MgO. Two reactants combine to form a single product, which is a combination reaction.",
+      "marks": 1,
+      "negative_marks": 0,
+      "difficulty": "Easy",
+      "year": 2024,
+      "category": "pyq"
+    },
+    {
+      "id": "q_8",
+      "class_id": "c_10",
+      "subject_id": "s_10_science",
+      "chapter_id": "ch_10_sci_1",
+      "type": "objective",
+      "question_text": "What happens when dilute hydrochloric acid is added to iron filings?",
+      "options": [
+        "Hydrogen gas and iron chloride are produced.",
+        "Chlorine gas and iron hydroxide are produced.",
+        "No reaction takes place.",
+        "Iron salt and water are produced."
+      ],
+      "correct_answer": 0,
+      "explanation": "Fe(s) + 2HCl(aq) → FeCl2(aq) + H2(g)↑. Hydrogen gas and iron chloride are produced.",
+      "marks": 1,
+      "negative_marks": 0,
+      "difficulty": "Medium",
+      "year": 2023,
+      "category": "pyq"
+    },
+    {
+      "id": "q_9",
+      "class_id": "c_10",
+      "subject_id": "s_10_science",
+      "chapter_id": "ch_10_sci_1",
+      "type": "objective",
+      "question_text": "Which of the following gases can be used for storage of fresh sample of an oil for a long time?",
+      "options": [
+        "Carbon dioxide or oxygen",
+        "Nitrogen or oxygen",
+        "Carbon dioxide or helium",
+        "Helium or nitrogen"
+      ],
+      "correct_answer": 3,
+      "explanation": "Helium and Nitrogen are inert gases and prevent the oxidation of food/oils, thereby avoiding rancidity.",
+      "marks": 1,
+      "negative_marks": 0,
+      "difficulty": "Medium",
+      "year": 2022,
+      "category": "chapter_test"
+    },
+    {
+      "id": "q_10",
+      "class_id": "c_10",
+      "subject_id": "s_10_science",
+      "chapter_id": "ch_10_sci_1",
+      "type": "objective",
+      "question_text": "The chemical formula of rust is:",
+      "options": [
+        "Fe2O3",
+        "Fe3O4",
+        "Fe2O3 . xH2O",
+        "Fe(OH)3"
+      ],
+      "correct_answer": 2,
+      "explanation": "Rust is hydrated iron oxide: Fe2O3 . xH2O.",
+      "marks": 1,
+      "negative_marks": 0,
+      "difficulty": "Medium",
+      "year": 2023,
+      "category": "pyq"
+    }
+  ],
+  "tests": [
+    {
+      "id": "t_math_ch1",
+      "class_id": "c_10",
+      "subject_id": "s_10_math",
+      "title": "Real Numbers Chapter Test (वास्तविक संख्याएँ)",
+      "category": "Chapter Test",
+      "time_limit": 10,
+      "total_marks": 5,
+      "instructions": "1. All questions are multiple choice.\n2. Choose the best answer for each question.\n3. There is no negative marking.\n4. Click Submit before time runs out.",
+      "question_ids": [
+        "q_1",
+        "q_2",
+        "q_3",
+        "q_4",
+        "q_5"
+      ]
+    },
+    {
+      "id": "t_sci_ch1",
+      "class_id": "c_10",
+      "subject_id": "s_10_science",
+      "title": "Chemical Reactions Chapter Test (रासायनिक अभिक्रियाएँ)",
+      "category": "Chapter Test",
+      "time_limit": 10,
+      "total_marks": 5,
+      "instructions": "1. Choose the correct answer.\n2. Total marks: 5.\n3. No negative marking.\n4. Do not refresh the page during the exam.",
+      "question_ids": [
+        "q_6",
+        "q_7",
+        "q_8",
+        "q_9",
+        "q_10"
+      ]
+    },
+    {
+      "id": "t_math_mock1",
+      "class_id": "c_10",
+      "subject_id": "s_10_math",
+      "title": "BSEB Class 10 Math Practice Board Paper",
+      "category": "Mock Test",
+      "time_limit": 20,
+      "total_marks": 5,
+      "instructions": "1. Simulated Bihar Board final examination paper.\n2. 5 target objective questions.\n3. Solve carefully.",
+      "question_ids": [
+        "q_1",
+        "q_2",
+        "q_3",
+        "q_4",
+        "q_5"
+      ]
+    }
+  ],
+  "test_attempts": [],
+  "pyqs": [
+    {
+      "id": "pyq_1",
+      "class_id": "c_10",
+      "subject_id": "s_10_math",
+      "year": 2024,
+      "exam_name": "Annual Board Exam (Shift 1)",
+      "question_ids": [
+        "q_1",
+        "q_2",
+        "q_5"
+      ]
+    },
+    {
+      "id": "pyq_2",
+      "class_id": "c_10",
+      "subject_id": "s_10_science",
+      "year": 2024,
+      "exam_name": "Annual Board Exam (Shift 1)",
+      "question_ids": [
+        "q_6",
+        "q_7",
+        "q_8"
+      ]
+    }
+  ],
+  "syllabus": [
+    {
+      "id": "syl_10_math",
+      "class_id": "c_10",
+      "subject_id": "s_10_math",
+      "introduction": "The Bihar Board Class 10 Mathematics syllabus is designed to build a strong foundation in algebra, geometry, trigonometry, and arithmetic. The paper consists of 100 marks total (50% Objective and 50% Subjective).",
+      "chapters_list": [
+        {
+          "name": "Real Numbers (वास्तविक संख्याएँ)",
+          "weightage": "10 Marks",
+          "description": "Euclid's division lemma, fundamental theorem of arithmetic, irrational proofs, terminating/non-terminating rational numbers."
+        },
+        {
+          "name": "Algebra (बीजगणित)",
+          "weightage": "20 Marks",
+          "description": "Polynomials, Pair of linear equations in two variables, Quadratic equations, Arithmetic Progressions (AP)."
+        },
+        {
+          "name": "Trigonometry (त्रिकोणमिति)",
+          "weightage": "20 Marks",
+          "description": "Trigonometric ratios, identities, heights and distances."
+        },
+        {
+          "name": "Coordinate Geometry (निर्देशांक ज्यामिति)",
+          "weightage": "10 Marks",
+          "description": "Distance formula, section formula, area of triangle."
+        },
+        {
+          "name": "Geometry (ज्यामिति)",
+          "weightage": "20 Marks",
+          "description": "Triangles, Circles, and Constructions."
+        },
+        {
+          "name": "Mensuration (क्षेत्रमिति)",
+          "weightage": "10 Marks",
+          "description": "Surface areas and volumes of combinations of solids (cylinder, cone, sphere, frustum)."
+        },
+        {
+          "name": "Statistics and Probability (सांख्यिकी और प्रायिकता)",
+          "weightage": "10 Marks",
+          "description": "Mean, median, mode of grouped data, cumulative frequency graphs. Classical probability definition."
+        }
+      ],
+      "exam_pattern": "Total Marks: 100\n- Section A: 100 Objective Questions (MCQs), attempt any 50 (50 marks)\n- Section B: 30 Short Answer Type Questions, attempt any 15 (30 marks)\n- Section B (Long): 8 Long Answer Type Questions, attempt any 4 (20 marks)"
+    },
+    {
+      "id": "syl_10_sci",
+      "class_id": "c_10",
+      "subject_id": "s_10_science",
+      "introduction": "The Bihar Board Class 10 Science syllabus covers Physics, Chemistry, and Biology. There is a theory paper of 80 marks and a practical exam of 20 marks.",
+      "chapters_list": [
+        {
+          "name": "Chemistry (रासायनिक विज्ञान)",
+          "weightage": "25 Marks",
+          "description": "Chemical reactions, Acids bases and salts, Metals and non-metals, Carbon and its compounds."
+        },
+        {
+          "name": "Biology (जीव विज्ञान)",
+          "weightage": "25 Marks",
+          "description": "Life processes, Control and coordination, How do organisms reproduce, Heredity and evolution."
+        },
+        {
+          "name": "Physics (भौतिक विज्ञान)",
+          "weightage": "30 Marks",
+          "description": "Light reflection and refraction, Human eye and colorful world, Electricity, Magnetic effects of electric current."
+        }
+      ],
+      "exam_pattern": "Theory Marks: 80 | Practical Marks: 20\n- Section A: 80 Objective Questions, attempt any 40 (40 marks)\n- Section B: Short & Long Subjective Questions from Physics, Chemistry, and Biology (40 marks)"
+    }
+  ]
+}
