@@ -800,10 +800,136 @@ h1, h2, h3, h4, h5, h6 {
   background: linear-gradient(180deg, rgba(217, 119, 6, 0.08) 0%, var(--bg-card) 60%);
 }
 
-@media (max-width: 640px) {
-  .podium-wrap { flex-direction: column; align-items: stretch; }
-  .podium-1, .podium-2, .podium-3 { order: unset; flex: unset; }
-  .ai-doubt-fab span.text { display: none; }
-  .ai-doubt-fab { padding: 16px; }
+@media (max-width: 1024px) {
+  .desktop-nav {
+    display: none !important;
+  }
+  .mobile-toggle {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+  }
+  .grid-4 {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .grid-3 {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .container {
+    padding: 0 16px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  :root {
+    --header-height: 64px;
+  }
+
+  html, body {
+    overflow-x: hidden;
+  }
+
+  .grid-4, .grid-3, .grid-2 {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+
+  .hero-container {
+    padding: 32px 16px !important;
+    text-align: center;
+  }
+
+  .hero-title {
+    font-size: 28px !important;
+    line-height: 1.25 !important;
+  }
+
+  .hero-subtitle {
+    font-size: 15px !important;
+  }
+
+  .hero-actions {
+    flex-direction: column !important;
+    width: 100% !important;
+    gap: 10px !important;
+  }
+
+  .hero-actions .btn {
+    width: 100% !important;
+  }
+
+  .card {
+    padding: 18px 16px !important;
+    border-radius: 14px !important;
+  }
+
+  .btn-lg {
+    padding: 12px 20px !important;
+    font-size: 15px !important;
+  }
+
+  .tabs {
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 6px;
+    gap: 6px;
+  }
+
+  .tab-btn {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+
+  .podium-wrap {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .podium-1, .podium-2, .podium-3 {
+    order: unset;
+    flex: unset;
+  }
+
+  .ai-doubt-fab span.text {
+    display: none;
+  }
+  .ai-doubt-fab {
+    padding: 14px;
+    bottom: 20px;
+    right: 20px;
+  }
+
+  /* Responsive Tables */
+  table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  th, td {
+    padding: 10px 10px !important;
+    font-size: 12px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-title {
+    font-size: 24px !important;
+  }
+
+  .btn {
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+
+  .form-control {
+    font-size: 14px;
+    padding: 10px 12px;
+  }
+
+  .card-title {
+    font-size: 17px;
+  }
 }
 

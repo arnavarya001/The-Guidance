@@ -28,7 +28,7 @@ export default function ReceiptModal({ receipt, isOpen, onClose }) {
         backgroundColor: '#ffffff',
         color: '#0f172a',
         borderRadius: '20px',
-        padding: '36px',
+        padding: 'clamp(16px, 4vw, 36px)',
         boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
         position: 'relative',
         maxHeight: '90vh',

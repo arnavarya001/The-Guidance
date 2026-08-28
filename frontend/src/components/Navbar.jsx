@@ -526,6 +526,82 @@ export default function Navbar({ onOpenAiDoubt, onOpenAiGuru }) {
               <span>Admin Panel</span>
             </div>
           )}
+
+          {/* Mobile Drawer Bottom Quick Action Bar */}
+          <div style={{
+            borderTop: '1px solid var(--border)',
+            paddingTop: '12px',
+            marginTop: '6px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '10px'
+          }}>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <button
+                onClick={toggleLanguage}
+                className="btn btn-outline btn-sm"
+                style={{ flex: 1, padding: '8px', fontSize: '13px', borderRadius: '10px' }}
+              >
+                🌐 {language === 'en' ? 'English' : 'हिंदी'}
+              </button>
+              {handleOpenAi && (
+                <button
+                  onClick={() => { setMobileMenuOpen(false); handleOpenAi(); }}
+                  className="btn btn-sm"
+                  style={{
+                    flex: 1,
+                    padding: '8px',
+                    fontSize: '13px',
+                    borderRadius: '10px',
+                    background: 'linear-gradient(135deg, var(--primary-light), var(--secondary-light))',
+                    color: 'var(--primary)',
+                    fontWeight: 700
+                  }}
+                >
+                  🤖 {t('navAiGuru')}
+                </button>
+              )}
+              <button
+                onClick={toggleTheme}
+                className="btn btn-outline btn-sm"
+                style={{ padding: '8px 12px', fontSize: '16px', borderRadius: '10px' }}
+                title="Toggle Dark / Light Theme"
+              >
+                {theme === 'light' ? '🌙' : '☀️'}
+              </button>
+            </div>
+
+            {!user ? (
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button
+                  onClick={() => navigateTo('#login')}
+                  className="btn btn-outline"
+                  style={{ flex: 1, padding: '10px', fontSize: '13px', borderRadius: '10px' }}
+                >
+                  {t('navLogin')}
+                </button>
+                <button
+                  onClick={() => navigateTo('#signup')}
+                  className="btn btn-primary"
+                  style={{ flex: 1, padding: '10px', fontSize: '13px', borderRadius: '10px' }}
+                >
+                  {t('navSignup')}
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => {
+                  logout();
+                  setMobileMenuOpen(false);
+                  window.location.hash = '#home';
+                }}
+                className="btn btn-outline"
+                style={{ width: '100%', padding: '10px', color: 'var(--danger)', fontSize: '13px', borderRadius: '10px' }}
+              >
+                🚪 Logout ({user.name ? user.name.split(' ')[0] : 'Student'})
+              </button>
+            )}
+          </div>
         </div>
       )}
     </header>
