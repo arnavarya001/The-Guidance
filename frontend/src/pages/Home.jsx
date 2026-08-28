@@ -1,8 +1,12 @@
 import React from 'react';
 import { useLanguage } from '../context/LanguageContext';
 
-export default function Home({ onOpenAiDoubt }) {
+export default function Home({ onOpenAiDoubt, settings }) {
   const { t, language } = useLanguage();
+
+  const announcement = settings?.announcement || '📢 Admissions open for 2026-27 Matric & Inter batches! Enroll now for free sample tests & notes.';
+  const heroTitle = settings?.heroTitle || 'Bihar Board (BSEB) & CBSE Excellence';
+  const heroSubtitle = settings?.heroSubtitle || t('heroSubtitle');
 
   const classesList = [
     { id: 'c_5', name: language === 'hi' ? 'कक्षा 5' : 'Class 5', desc: language === 'hi' ? 'प्राथमिक बोर्ड फाउंडेशन' : 'Primary Board Foundation' },
@@ -21,6 +25,31 @@ export default function Home({ onOpenAiDoubt }) {
 
   return (
     <div>
+      {/* Live Announcement Ribbon */}
+      {announcement && (
+        <div style={{
+          backgroundColor: '#fef3c7',
+          borderBottom: '1px solid #fde68a',
+          color: '#92400e',
+          padding: '10px 20px',
+          textAlign: 'center',
+          fontSize: '13px',
+          fontWeight: 600,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '8px'
+        }}>
+          <span>{announcement}</span>
+          <span
+            onClick={() => navigateTo('#test-series')}
+            style={{ textDecoration: 'underline', cursor: 'pointer', fontWeight: 700, color: '#b45309' }}
+          >
+            Start Free Practice →
+          </span>
+        </div>
+      )}
+
       {/* Hero Section */}
       <section className="section" style={{
         background: 'linear-gradient(135deg, var(--bg) 0%, var(--primary-light) 50%, var(--bg) 100%)',

@@ -23,10 +23,16 @@ export default function TestSeries() {
       try {
         const clsRes = await fetch('/api/courses/classes');
         const clsData = await clsRes.json();
-        setClasses(clsData);
+        const safeClasses = Array.isArray(clsData) && clsData.length > 0 ? clsData : [
+          { id: 'c_9', name: 'Class 9' },
+          { id: 'c_10', name: 'Class 10' },
+          { id: 'c_11_science', name: 'Class 11 Science' },
+          { id: 'c_12_science', name: 'Class 12 Science' }
+        ];
+        setClasses(safeClasses);
 
         // Default to student class or Class 10
-        let defCls = user?.class || clsData[5]?.id || clsData[0]?.id;
+        let defCls = user?.class || safeClasses.find(c => c.id === 'c_10')?.id || safeClasses[0]?.id || 'c_10';
 
         // Check hash query params
         const hash = window.location.hash;
@@ -34,7 +40,6 @@ export default function TestSeries() {
           const params = new URLSearchParams(hash.split('?')[1]);
           const subParam = params.get('subject');
           if (subParam) {
-            // Determine class from subject ID (s_10_math -> c_10)
             const parts = subParam.split('_');
             if (parts[1]) defCls = `c_${parts[1]}`;
             setSelectedSubject(subParam);
@@ -42,7 +47,14 @@ export default function TestSeries() {
         }
         setSelectedClass(defCls);
       } catch (e) {
-        console.error("Failed to load initial series data", e);
+        console.warn("Failed to load initial series data, using defaults", e);
+        setClasses([
+          { id: 'c_9', name: 'Class 9' },
+          { id: 'c_10', name: 'Class 10' },
+          { id: 'c_11_science', name: 'Class 11 Science' },
+          { id: 'c_12_science', name: 'Class 12 Science' }
+        ]);
+        setSelectedClass('c_10');
       } finally {
         setLoading(false);
       }
@@ -58,13 +70,17 @@ export default function TestSeries() {
       try {
         const res = await fetch(`/api/courses/subjects?classId=${selectedClass}`);
         const data = await res.json();
-        setSubjects(data);
-        // Do not clear selectedSubject if it was preloaded from parameters
-        if (data.length > 0 && !selectedSubject.includes(selectedClass.replace('c_', ''))) {
-          setSelectedSubject(data[0].id);
+        const safeSubjects = Array.isArray(data) && data.length > 0 ? data : [
+          { id: 's_10_sci', name: 'Science' },
+          { id: 's_10_math', name: 'Mathematics' }
+        ];
+        setSubjects(safeSubjects);
+        if (safeSubjects.length > 0 && !selectedSubject.includes(selectedClass.replace('c_', ''))) {
+          setSelectedSubject(safeSubjects[0].id);
         }
       } catch (e) {
-        console.error("Failed to load subjects", e);
+        console.warn("Failed to load subjects", e);
+        setSubjects([]);
       }
     };
     fetchSubjects();
@@ -81,9 +97,10 @@ export default function TestSeries() {
       try {
         const res = await fetch(`/api/tests?classId=${selectedClass}&subjectId=${selectedSubject}`);
         const data = await res.json();
-        setTests(data);
+        setTests(Array.isArray(data) ? data : []);
       } catch (e) {
-        console.error("Failed to load tests", e);
+        console.warn("Failed to load tests", e);
+        setTests([]);
       }
     };
     fetchTests();

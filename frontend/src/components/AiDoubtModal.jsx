@@ -62,7 +62,7 @@ Niche diye gaye suggestions me se click karein ya apna sawal type karein!`,
         text: m.text
       }));
 
-      const response = await fetch('http://localhost:5050/api/ai/doubt', {
+      const response = await fetch('/api/ai/doubt', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

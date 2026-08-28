@@ -4,16 +4,21 @@ import { signInWithGooglePopup } from '../firebase';
 
 export default function Auth({ mode = 'login' }) {
   const { login } = useAuth();
-  const [authMode, setAuthMode] = useState(mode); // 'login' | 'signup' | 'forgot'
+  const [authMode, setAuthMode] = useState(mode); // 'login' | 'signup' | 'forgot' | 'otp' | 'admin'
   const [classes, setClasses] = useState([]);
-  
+
   // Form fields
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [mobile, setMobile] = useState('');
   const [password, setPassword] = useState('');
-  const [classId, setClassId] = useState('');
+  const [classId, setClassId] = useState('c_10');
   const [newPassword, setNewPassword] = useState('');
+
+  // OTP state
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
+  const [otpTimer, setOtpTimer] = useState(0);
 
   // Status
   const [error, setError] = useState('');
@@ -27,153 +32,116 @@ export default function Auth({ mode = 'login' }) {
   }, [mode]);
 
   useEffect(() => {
-    // Load classes list for dropdown
-    const fetchClasses = async () => {
-      try {
-        const res = await fetch('/api/courses/classes');
-        if (res.ok) {
-          const data = await res.json();
+    let interval;
+    if (otpTimer > 0) {
+      interval = setInterval(() => setOtpTimer(prev => prev - 1), 1000);
+    }
+    return () => clearInterval(interval);
+  }, [otpTimer]);
+
+  useEffect(() => {
+    fetch('/api/courses/classes')
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
           setClasses(data);
-          if (data.length > 0) setClassId(data[5]?.id || data[0].id); // default to Class 10 if exists
+          setClassId(data.find(c => c.id === 'c_10')?.id || data[0].id);
+        } else {
+          setClasses([
+            { id: 'c_9', name: 'Class 9' },
+            { id: 'c_10', name: 'Class 10' },
+            { id: 'c_11_science', name: 'Class 11 Science' },
+            { id: 'c_12_science', name: 'Class 12 Science' }
+          ]);
         }
-      } catch (e) {
-        console.error("Failed to load classes", e);
-      }
-    };
-    fetchClasses();
+      })
+      .catch(() => {
+        setClasses([
+          { id: 'c_9', name: 'Class 9' },
+          { id: 'c_10', name: 'Class 10' },
+          { id: 'c_11_science', name: 'Class 11 Science' },
+          { id: 'c_12_science', name: 'Class 12 Science' }
+        ]);
+      });
   }, []);
 
+  // Handle Standard Email/Password Login
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setSuccess('');
     setLoading(true);
 
-    const cleanEmail = (email || '').trim().toLowerCase();
-    const cleanPassword = (password || '').trim();
-
-    if (!cleanEmail || !cleanPassword) {
-      setError('Please fill in all fields.');
-      setLoading(false);
-      return;
-    }
-
-    // 1. Instant Admin Access (Guaranteed to work across all platforms/Vercel/Offline)
-    if (cleanEmail === 'admin@theguidance.com' && cleanPassword === 'admin123') {
-      setSuccess('Logged in as Administrator!');
-      const adminUser = {
-        id: 'u_admin',
-        name: 'Admin The Guidance',
-        email: 'admin@theguidance.com',
-        mobile: '9999999999',
-        class: 'All',
-        board: 'Bihar Board',
-        role: 'admin'
-      };
-      setTimeout(() => {
-        login(adminUser, 'admin_session_token_' + Date.now());
-        window.location.hash = '#admin';
-        setLoading(false);
-      }, 400);
-      return;
-    }
-
-    // 2. Demo Student Instant Access
-    if (cleanEmail === 'student@theguidance.com' || (cleanEmail === 'aarav@gmail.com' && cleanPassword === '123456')) {
-      setSuccess('Logged in as Demo Student!');
-      const studentUser = {
-        id: 'u_student1',
-        name: 'Aarav Kumar',
-        email: cleanEmail,
-        mobile: '9876543210',
-        class: 'c_10',
-        board: 'Bihar Board',
-        role: 'student'
-      };
-      setTimeout(() => {
-        login(studentUser, 'student_session_token_' + Date.now());
-        window.location.hash = '#dashboard';
-        setLoading(false);
-      }, 400);
-      return;
-    }
-
-    // 3. Check registered users in local storage
-    const localUsers = JSON.parse(localStorage.getItem('the_guidance_users') || '[]');
-    const matched = localUsers.find(u => u.email.toLowerCase() === cleanEmail && u.password === cleanPassword);
-    if (matched) {
-      setSuccess('Logged in successfully!');
-      setTimeout(() => {
-        login(matched, 'local_session_token_' + Date.now());
-        window.location.hash = matched.role === 'admin' ? '#admin' : '#dashboard';
-        setLoading(false);
-      }, 400);
-      return;
-    }
-
-    // 4. Try Backend API
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: cleanEmail, password: cleanPassword })
+        body: JSON.stringify({ email: email.trim(), password })
       });
       const data = await res.json();
-      
-      if (res.ok) {
-        setSuccess('Logged in successfully!');
-        setTimeout(() => {
-          login(data.user, data.token);
-          window.location.hash = data.user.role === 'admin' ? '#admin' : '#dashboard';
-        }, 400);
-      } else {
-        setError(data.message || 'Invalid credentials.');
+
+      if (!res.ok) {
+        throw new Error(data.message || 'Login failed.');
       }
+
+      setSuccess('Login successful! Redirecting...');
+      setTimeout(() => {
+        login(data.user, data.token);
+        window.location.hash = data.user.role === 'admin' ? '#admin' : '#dashboard';
+      }, 500);
     } catch (err) {
-      setError('Invalid email or password. For Admin login, use admin@theguidance.com / admin123');
+      setError(err.message || 'Invalid credentials or server error.');
     } finally {
       setLoading(false);
     }
   };
 
+  // Handle Dedicated Admin Login
+  const handleAdminLogin = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+    setLoading(true);
+
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim(), password })
+      });
+      const data = await res.json();
+
+      if (!res.ok || !data.user || data.user.role !== 'admin') {
+        throw new Error('Access denied. Valid administrator credentials required.');
+      }
+
+      setSuccess('Admin credentials verified! Welcome, ' + data.user.name);
+      setTimeout(() => {
+        login(data.user, data.token);
+        window.location.hash = '#admin';
+      }, 500);
+    } catch (err) {
+      setError(err.message || 'Admin authentication failed.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle Student Registration
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setSuccess('');
     setLoading(true);
 
-    if (!name || !email || !mobile || !password || !classId) {
-      setError('Please fill in all fields.');
-      setLoading(false);
-      return;
-    }
-
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setError('Please enter a valid email address.');
-      setLoading(false);
-      return;
-    }
-
-    if (!/^\d{10}$/.test(mobile)) {
-      setError('Please enter a valid 10-digit mobile number.');
-      setLoading(false);
-      return;
-    }
-
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters long.');
-      setLoading(false);
-      return;
-    }
-
     try {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name,
-          email,
-          mobile,
+          name: name.trim(),
+          email: email.trim(),
+          mobile: mobile.trim(),
           password,
           classId,
           board: 'Bihar Board'
@@ -181,97 +149,94 @@ export default function Auth({ mode = 'login' }) {
       });
       const data = await res.json();
 
-      if (res.ok) {
-        setSuccess('Account created successfully!');
-        setTimeout(() => {
-          login(data.user, data.token);
-          window.location.hash = '#dashboard';
-        }, 800);
-        return;
-      } else {
-        setError(data.message || 'Registration failed.');
+      if (!res.ok) {
+        throw new Error(data.message || 'Registration failed.');
       }
-    } catch (err) {
-      // Local registration fallback
-      const newUser = {
-        id: 'u_' + Date.now(),
-        name,
-        email,
-        mobile,
-        password,
-        class: classId,
-        board: 'Bihar Board',
-        role: 'student'
-      };
-      const localUsers = JSON.parse(localStorage.getItem('the_guidance_users') || '[]');
-      localUsers.push(newUser);
-      localStorage.setItem('the_guidance_users', JSON.stringify(localUsers));
 
       setSuccess('Account created successfully!');
       setTimeout(() => {
-        login(newUser, 'local_jwt_session_' + Date.now());
+        login(data.user, data.token);
         window.location.hash = '#dashboard';
-      }, 800);
+      }, 500);
+    } catch (err) {
+      setError(err.message || 'Registration failed.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleForgotSubmit = async (e) => {
+  // Handle Send OTP
+  const handleSendOtp = async (e) => {
     e.preventDefault();
+    if (!mobile || !/^\d{10}$/.test(mobile.trim())) {
+      setError('Please enter a valid 10-digit mobile number.');
+      return;
+    }
+
     setError('');
     setSuccess('');
     setLoading(true);
 
-    if (!email || !mobile || !newPassword) {
-      setError('All fields are required.');
-      setLoading(false);
-      return;
-    }
-
-    if (newPassword.length < 6) {
-      setError('Password must be at least 6 characters.');
-      setLoading(false);
-      return;
-    }
-
     try {
-      const res = await fetch('/api/auth/forgot-password', {
+      const res = await fetch('/api/auth/send-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, mobile, newPassword })
+        body: JSON.stringify({ mobile: mobile.trim() })
       });
       const data = await res.json();
 
-      if (res.ok) {
-        setSuccess('Password updated successfully! You can now log in.');
-        setTimeout(() => {
-          setAuthMode('login');
-        }, 1200);
-        return;
-      } else {
-        setError(data.message || 'Password reset failed.');
-      }
-    } catch (err) {
-      // Local/offline password reset fallback
-      const cleanEmail = (email || '').trim().toLowerCase();
-      const localUsers = JSON.parse(localStorage.getItem('the_guidance_users') || '[]');
-      const userIndex = localUsers.findIndex(u => u.email.toLowerCase() === cleanEmail);
-      
-      if (userIndex !== -1) {
-        localUsers[userIndex].password = newPassword;
-        localStorage.setItem('the_guidance_users', JSON.stringify(localUsers));
-      }
+      if (!res.ok) throw new Error(data.message || 'Failed to send OTP.');
 
-      setSuccess('Password updated successfully! You can now log in with your new password.');
-      setTimeout(() => {
-        setAuthMode('login');
-      }, 1200);
+      setOtpSent(true);
+      setOtpTimer(60);
+      setSuccess(`OTP sent to +91 ${mobile.trim()} (Use 123456 for instant testing)`);
+    } catch (err) {
+      setError(err.message || 'Failed to send OTP.');
     } finally {
       setLoading(false);
     }
   };
 
+  // Handle Verify OTP
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault();
+    if (!otpCode || otpCode.length < 4) {
+      setError('Please enter the verification code.');
+      return;
+    }
+
+    setError('');
+    setSuccess('');
+    setLoading(true);
+
+    try {
+      const res = await fetch('/api/auth/verify-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mobile: mobile.trim(),
+          otp: otpCode.trim(),
+          name: name.trim() || undefined,
+          classId: classId || 'c_10'
+        })
+      });
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.message || 'OTP verification failed.');
+
+      setSuccess('Verification successful! Logging in...');
+      setTimeout(() => {
+        login(data.user, data.token);
+        window.location.hash = '#dashboard';
+      }, 500);
+    } catch (err) {
+      setError(err.message || 'Invalid OTP code.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle Google Sign-In
   const handleGoogleSignIn = async () => {
     setError('');
     setSuccess('');
@@ -295,39 +260,155 @@ export default function Auth({ mode = 'login' }) {
     }
   };
 
+  // Handle Forgot Password
+  const handleForgotSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+    setLoading(true);
+
+    try {
+      const res = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim(), mobile: mobile.trim(), newPassword })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Failed to reset password.');
+
+      setSuccess('Password updated successfully! You can now log in.');
+      setTimeout(() => setAuthMode('login'), 1200);
+    } catch (err) {
+      setError(err.message || 'Failed to reset password.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <section className="section" style={{
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       minHeight: 'calc(100vh - 72px)',
-      background: 'radial-gradient(circle at top, var(--primary-light) 0%, var(--bg) 100%)'
+      background: 'radial-gradient(circle at top, var(--primary-light) 0%, var(--bg) 100%)',
+      padding: '40px 20px'
     }}>
       <div className="card glass" style={{
         width: '100%',
         maxWidth: '480px',
-        padding: '40px',
-        borderRadius: '20px',
+        padding: '36px',
+        borderRadius: '24px',
         boxShadow: 'var(--shadow-premium)'
       }}>
-        {/* Header Toggle */}
-        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <h2 style={{ fontSize: '28px', marginBottom: '8px' }}>
-            {authMode === 'login' && 'Welcome Back'}
-            {authMode === 'signup' && 'Create Your Account'}
+        {/* Auth Mode Switch Tabs */}
+        <div style={{
+          display: 'flex',
+          backgroundColor: 'var(--bg-card-hover)',
+          padding: '4px',
+          borderRadius: '12px',
+          marginBottom: '24px'
+        }}>
+          <button
+            type="button"
+            onClick={() => { setAuthMode('login'); setError(''); setSuccess(''); }}
+            style={{
+              flex: 1,
+              padding: '8px 12px',
+              borderRadius: '8px',
+              border: 'none',
+              background: authMode === 'login' ? 'var(--bg-card)' : 'transparent',
+              color: authMode === 'login' ? 'var(--primary)' : 'var(--gray)',
+              fontWeight: authMode === 'login' ? 700 : 600,
+              fontSize: '13px',
+              cursor: 'pointer',
+              boxShadow: authMode === 'login' ? 'var(--shadow-sm)' : 'none',
+              transition: 'var(--transition)'
+            }}
+          >
+            Email Login
+          </button>
+          <button
+            type="button"
+            onClick={() => { setAuthMode('otp'); setError(''); setSuccess(''); }}
+            style={{
+              flex: 1,
+              padding: '8px 12px',
+              borderRadius: '8px',
+              border: 'none',
+              background: authMode === 'otp' ? 'var(--bg-card)' : 'transparent',
+              color: authMode === 'otp' ? '#f59e0b' : 'var(--gray)',
+              fontWeight: authMode === 'otp' ? 700 : 600,
+              fontSize: '13px',
+              cursor: 'pointer',
+              boxShadow: authMode === 'otp' ? 'var(--shadow-sm)' : 'none',
+              transition: 'var(--transition)'
+            }}
+          >
+            📱 Mobile OTP
+          </button>
+          <button
+            type="button"
+            onClick={() => { setAuthMode('signup'); setError(''); setSuccess(''); }}
+            style={{
+              flex: 1,
+              padding: '8px 12px',
+              borderRadius: '8px',
+              border: 'none',
+              background: authMode === 'signup' ? 'var(--bg-card)' : 'transparent',
+              color: authMode === 'signup' ? 'var(--primary)' : 'var(--gray)',
+              fontWeight: authMode === 'signup' ? 700 : 600,
+              fontSize: '13px',
+              cursor: 'pointer',
+              boxShadow: authMode === 'signup' ? 'var(--shadow-sm)' : 'none',
+              transition: 'var(--transition)'
+            }}
+          >
+            Sign Up
+          </button>
+          <button
+            type="button"
+            onClick={() => { setAuthMode('admin'); setError(''); setSuccess(''); }}
+            style={{
+              flex: 1,
+              padding: '8px 12px',
+              borderRadius: '8px',
+              border: 'none',
+              background: authMode === 'admin' ? 'linear-gradient(135deg, #f59e0b, #d97706)' : 'transparent',
+              color: authMode === 'admin' ? '#ffffff' : 'var(--gray)',
+              fontWeight: authMode === 'admin' ? 700 : 600,
+              fontSize: '13px',
+              cursor: 'pointer',
+              boxShadow: authMode === 'admin' ? 'var(--shadow-sm)' : 'none',
+              transition: 'var(--transition)'
+            }}
+          >
+            👑 Admin
+          </button>
+        </div>
+
+        {/* Title */}
+        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+          <h2 style={{ fontSize: '24px', fontWeight: 800, marginBottom: '6px', color: 'var(--text-dark)' }}>
+            {authMode === 'login' && 'Student Login'}
+            {authMode === 'otp' && 'Instant Mobile Sign In'}
+            {authMode === 'signup' && 'Create Student Account'}
+            {authMode === 'admin' && 'Administrator Portal'}
             {authMode === 'forgot' && 'Reset Password'}
           </h2>
-          <p style={{ color: 'var(--gray)', fontSize: '14px' }}>
-            {authMode === 'login' && 'Access Bihar Board materials and test papers'}
-            {authMode === 'signup' && 'Sign up to build performance metrics'}
-            {authMode === 'forgot' && 'Confirm details to update password'}
+          <p style={{ color: 'var(--gray)', fontSize: '13px' }}>
+            {authMode === 'login' && 'Sign in with your email and password'}
+            {authMode === 'otp' && 'Fast and secure OTP verification for Bihar Board students'}
+            {authMode === 'signup' && 'Join thousands of students preparing with The Guidance'}
+            {authMode === 'admin' && 'Authorized coaching faculty & administrator login'}
+            {authMode === 'forgot' && 'Enter your registered details to set a new password'}
           </p>
         </div>
 
-        {error && <div className="alert alert-error" style={{ fontSize: '14px' }}>⚠️ {error}</div>}
-        {success && <div className="alert alert-success" style={{ fontSize: '14px' }}>✅ {success}</div>}
+        {error && <div className="alert alert-error" style={{ fontSize: '13px', marginBottom: '16px' }}>⚠️ {error}</div>}
+        {success && <div className="alert alert-success" style={{ fontSize: '13px', marginBottom: '16px' }}>✅ {success}</div>}
 
-        {/* Google Sign In Button */}
+        {/* Google Sign In Option for student flows */}
         {(authMode === 'login' || authMode === 'signup') && (
           <div style={{ marginBottom: '20px' }}>
             <button
@@ -345,12 +426,11 @@ export default function Auth({ mode = 'login' }) {
                 color: '#1f2937',
                 border: '1px solid var(--border)',
                 borderRadius: '12px',
-                padding: '12px',
+                padding: '11px',
                 fontWeight: 600,
                 fontSize: '14px',
                 cursor: 'pointer',
-                boxShadow: '0 2px 6px rgba(0,0,0,0.06)',
-                transition: 'var(--transition)'
+                boxShadow: '0 2px 6px rgba(0,0,0,0.06)'
               }}
             >
               <svg width="18" height="18" viewBox="0 0 24 24">
@@ -362,7 +442,7 @@ export default function Auth({ mode = 'login' }) {
               Continue with Google
             </button>
 
-            <div style={{ margin: '18px 0 10px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ margin: '18px 0 14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <div style={{ flex: 1, height: '1px', background: 'var(--border)' }}></div>
               <span style={{ fontSize: '11px', color: 'var(--gray)', fontWeight: 600 }}>OR WITH EMAIL</span>
               <div style={{ flex: 1, height: '1px', background: 'var(--border)' }}></div>
@@ -370,134 +450,186 @@ export default function Auth({ mode = 'login' }) {
           </div>
         )}
 
-        {/* LOGIN FORM */}
+        {/* 1. EMAIL LOGIN FORM */}
         {authMode === 'login' && (
           <form onSubmit={handleLoginSubmit}>
             <div className="form-group">
               <label className="form-label">Email Address</label>
-              <input 
-                type="email" 
-                className="form-control" 
+              <input
+                type="email"
+                className="form-control"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                placeholder="example@gmail.com" 
-                required 
+                placeholder="student@gmail.com"
+                required
               />
             </div>
-            
+
             <div className="form-group">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                 <label className="form-label" style={{ marginBottom: 0 }}>Password</label>
-                <span 
-                  onClick={() => setAuthMode('forgot')} 
-                  style={{ fontSize: '13px', color: 'var(--primary)', fontWeight: 600, cursor: 'pointer' }}
+                <span
+                  onClick={() => setAuthMode('forgot')}
+                  style={{ fontSize: '12px', color: 'var(--primary)', fontWeight: 600, cursor: 'pointer' }}
                 >
                   Forgot Password?
                 </span>
               </div>
-              <input 
-                type="password" 
-                className="form-control" 
+              <input
+                type="password"
+                className="form-control"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
-                placeholder="Enter password" 
-                required 
+                placeholder="Enter password"
+                required
               />
             </div>
 
-            <button type="submit" disabled={loading} className="btn btn-primary" style={{ width: '100%', marginTop: '10px' }}>
-              {loading ? 'Logging in...' : 'Sign In'}
+            <button type="submit" disabled={loading} className="btn btn-primary" style={{ width: '100%', marginTop: '8px', padding: '12px' }}>
+              {loading ? 'Signing in...' : 'Sign In as Student'}
             </button>
-
-            <div style={{ margin: '14px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{ flex: 1, height: '1px', background: 'var(--border)' }}></div>
-              <span style={{ fontSize: '12px', color: 'var(--gray)' }}>ADMIN ACCESS</span>
-              <div style={{ flex: 1, height: '1px', background: 'var(--border)' }}></div>
-            </div>
-
-            <button 
-              type="button" 
-              onClick={() => {
-                const adminUser = {
-                  id: 'u_admin',
-                  name: 'Admin The Guidance',
-                  email: 'admin@theguidance.com',
-                  mobile: '9999999999',
-                  class: 'All',
-                  board: 'Bihar Board',
-                  role: 'admin'
-                };
-                login(adminUser, 'admin_session_' + Date.now());
-                window.location.hash = '#admin';
-              }} 
-              className="btn" 
-              style={{ 
-                width: '100%', 
-                background: 'linear-gradient(135deg, #f59e0b, #d97706)', 
-                color: 'white', 
-                border: 'none', 
-                fontWeight: 700,
-                boxShadow: '0 4px 12px rgba(245, 158, 11, 0.3)'
-              }}
-            >
-              👑 Instant 1-Click Admin Access
-            </button>
-
-            <div style={{ marginTop: '20px', textAlign: 'center', fontSize: '14px' }}>
-              Don't have an account?{' '}
-              <span 
-                onClick={() => setAuthMode('signup')} 
-                style={{ color: 'var(--primary)', fontWeight: 700, cursor: 'pointer' }}
-              >
-                Sign Up Free
-              </span>
-            </div>
           </form>
         )}
 
-        {/* SIGNUP FORM */}
+        {/* 2. MOBILE OTP FORM */}
+        {authMode === 'otp' && (
+          <form onSubmit={otpSent ? handleVerifyOtp : handleSendOtp}>
+            <div className="form-group">
+              <label className="form-label">10-Digit Mobile Number</label>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <span style={{
+                  padding: '10px 14px',
+                  backgroundColor: 'var(--bg-card-hover)',
+                  border: '1px solid var(--border)',
+                  borderRadius: '10px',
+                  fontWeight: 700,
+                  fontSize: '14px',
+                  display: 'flex',
+                  alignItems: 'center'
+                }}>+91</span>
+                <input
+                  type="tel"
+                  className="form-control"
+                  value={mobile}
+                  onChange={e => setMobile(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                  placeholder="9876543210"
+                  disabled={otpSent}
+                  required
+                />
+              </div>
+            </div>
+
+            {otpSent && (
+              <>
+                <div className="form-group">
+                  <label className="form-label">Student Name (Optional)</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={name}
+                    onChange={e => setName(e.target.value)}
+                    placeholder="Your Name"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">6-Digit Verification Code</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={otpCode}
+                    onChange={e => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    placeholder="Enter 123456"
+                    required
+                    style={{ fontSize: '18px', letterSpacing: '4px', textAlign: 'center', fontWeight: 700 }}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                  <button
+                    type="button"
+                    onClick={() => { setOtpSent(false); setOtpCode(''); }}
+                    style={{ background: 'none', border: 'none', color: 'var(--gray)', fontSize: '12px', cursor: 'pointer' }}
+                  >
+                    Change Number
+                  </button>
+                  {otpTimer > 0 ? (
+                    <span style={{ fontSize: '12px', color: 'var(--gray)' }}>Resend in {otpTimer}s</span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleSendOtp}
+                      style={{ background: 'none', border: 'none', color: 'var(--primary)', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}
+                    >
+                      Resend Code
+                    </button>
+                  )}
+                </div>
+              </>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn"
+              style={{
+                width: '100%',
+                padding: '12px',
+                background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                color: 'white',
+                fontWeight: 700,
+                border: 'none',
+                borderRadius: '12px'
+              }}
+            >
+              {loading ? 'Processing...' : (otpSent ? 'Verify Code & Sign In' : '📲 Send Verification Code')}
+            </button>
+          </form>
+        )}
+
+        {/* 3. SIGNUP FORM */}
         {authMode === 'signup' && (
           <form onSubmit={handleRegisterSubmit}>
             <div className="form-group">
               <label className="form-label">Full Name</label>
-              <input 
-                type="text" 
-                className="form-control" 
+              <input
+                type="text"
+                className="form-control"
                 value={name}
                 onChange={e => setName(e.target.value)}
-                placeholder="Aarav Kumar" 
-                required 
+                placeholder="Aarav Kumar"
+                required
               />
             </div>
 
             <div className="form-group">
               <label className="form-label">Email Address</label>
-              <input 
-                type="email" 
-                className="form-control" 
+              <input
+                type="email"
+                className="form-control"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                placeholder="aarav@gmail.com" 
-                required 
+                placeholder="aarav@gmail.com"
+                required
               />
             </div>
 
             <div className="form-group">
               <label className="form-label">Mobile Number</label>
-              <input 
-                type="tel" 
-                className="form-control" 
+              <input
+                type="tel"
+                className="form-control"
                 value={mobile}
-                onChange={e => setMobile(e.target.value)}
-                placeholder="9876543210 (10 digits)" 
-                required 
+                onChange={e => setMobile(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                placeholder="9876543210 (10 digits)"
+                required
               />
             </div>
 
             <div className="grid-2">
               <div className="form-group">
                 <label className="form-label">Class</label>
-                <select 
+                <select
                   className="form-control form-select"
                   value={classId}
                   onChange={e => setClassId(e.target.value)}
@@ -517,82 +649,130 @@ export default function Auth({ mode = 'login' }) {
 
             <div className="form-group">
               <label className="form-label">Password</label>
-              <input 
-                type="password" 
-                className="form-control" 
+              <input
+                type="password"
+                className="form-control"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
-                placeholder="Min 6 characters" 
-                required 
+                placeholder="Min 6 characters"
+                required
               />
             </div>
 
-            <button type="submit" disabled={loading} className="btn btn-primary" style={{ width: '100%', marginTop: '10px' }}>
+            <button type="submit" disabled={loading} className="btn btn-primary" style={{ width: '100%', marginTop: '8px', padding: '12px' }}>
               {loading ? 'Creating account...' : 'Create Account'}
             </button>
-
-            <div style={{ marginTop: '24px', textAlign: 'center', fontSize: '14px' }}>
-              Already registered?{' '}
-              <span 
-                onClick={() => setAuthMode('login')} 
-                style={{ color: 'var(--primary)', fontWeight: 700, cursor: 'pointer' }}
-              >
-                Sign In
-              </span>
-            </div>
           </form>
         )}
 
-        {/* FORGOT PASSWORD FORM */}
+        {/* 4. DEDICATED ADMIN LOGIN FORM */}
+        {authMode === 'admin' && (
+          <form onSubmit={handleAdminLogin}>
+            <div style={{
+              padding: '12px 16px',
+              backgroundColor: 'rgba(245, 158, 11, 0.1)',
+              border: '1px solid rgba(245, 158, 11, 0.3)',
+              borderRadius: '12px',
+              marginBottom: '18px',
+              fontSize: '12px',
+              color: '#92400e'
+            }}>
+              🔒 <strong>Faculty & Admin Only:</strong> Sign in with coaching administrator credentials.
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Admin Email</label>
+              <input
+                type="email"
+                className="form-control"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder="admin@theguidance.com"
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Admin Password</label>
+              <input
+                type="password"
+                className="form-control"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                placeholder="Enter admin password"
+                required
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn"
+              style={{
+                width: '100%',
+                padding: '12px',
+                background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                color: 'white',
+                fontWeight: 700,
+                border: 'none',
+                borderRadius: '12px',
+                boxShadow: '0 4px 12px rgba(245, 158, 11, 0.35)'
+              }}
+            >
+              {loading ? 'Verifying Admin Access...' : '👑 Sign In to Admin Console'}
+            </button>
+          </form>
+        )}
+
+        {/* 5. FORGOT PASSWORD FORM */}
         {authMode === 'forgot' && (
           <form onSubmit={handleForgotSubmit}>
             <div className="form-group">
               <label className="form-label">Registered Email</label>
-              <input 
-                type="email" 
-                className="form-control" 
+              <input
+                type="email"
+                className="form-control"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                placeholder="yourname@gmail.com" 
-                required 
+                placeholder="yourname@gmail.com"
+                required
               />
             </div>
 
             <div className="form-group">
               <label className="form-label">Registered Mobile Number</label>
-              <input 
-                type="tel" 
-                className="form-control" 
+              <input
+                type="tel"
+                className="form-control"
                 value={mobile}
                 onChange={e => setMobile(e.target.value)}
-                placeholder="10 digit number" 
-                required 
+                placeholder="10 digit number"
+                required
               />
             </div>
 
             <div className="form-group">
               <label className="form-label">New Password</label>
-              <input 
-                type="password" 
-                className="form-control" 
+              <input
+                type="password"
+                className="form-control"
                 value={newPassword}
                 onChange={e => setNewPassword(e.target.value)}
-                placeholder="Min 6 characters" 
-                required 
+                placeholder="Minimum 6 characters"
+                required
               />
             </div>
 
-            <button type="submit" disabled={loading} className="btn btn-primary" style={{ width: '100%', marginTop: '10px' }}>
-              {loading ? 'Updating password...' : 'Update Password'}
+            <button type="submit" disabled={loading} className="btn btn-primary" style={{ width: '100%', marginTop: '8px', padding: '12px' }}>
+              {loading ? 'Updating...' : 'Set New Password'}
             </button>
 
-            <div style={{ marginTop: '24px', textAlign: 'center', fontSize: '14px' }}>
-              Remember password?{' '}
-              <span 
-                onClick={() => setAuthMode('login')} 
-                style={{ color: 'var(--primary)', fontWeight: 700, cursor: 'pointer' }}
+            <div style={{ marginTop: '16px', textAlign: 'center' }}>
+              <span
+                onClick={() => setAuthMode('login')}
+                style={{ color: 'var(--primary)', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}
               >
-                Back to Sign In
+                ← Back to Login
               </span>
             </div>
           </form>

@@ -595,5 +595,61 @@
       ],
       "exam_pattern": "Theory Marks: 80 | Practical Marks: 20\n- Section A: 80 Objective Questions, attempt any 40 (40 marks)\n- Section B: Short & Long Subjective Questions from Physics, Chemistry, and Biology (40 marks)"
     }
+  ],
+  "site_settings": {
+    "heroTitle": "Bihar Board & CBSE Excellence Coaching",
+    "heroSubtitle": "Complete structured preparation for Class 5 to 12. Top faculty, comprehensive chapter notes, online test series, and 24/7 AI Guru doubt solving.",
+    "coachingName": "The Guidance Coaching Institute",
+    "coachingDesc": "Empowering students across Bihar with state-of-the-art academic resources, bilingual study materials (Hindi & English), and personalized mentorship.",
+    "address": "Bari Path, Near Patna College, Patna, Bihar - 800004",
+    "phone": "+91 98765 43210",
+    "email": "contact@theguidance.com",
+    "whatsapp": "+91 98765 43210",
+    "announcement": "📢 Admissions open for 2026-27 Matric & Inter batches! Enroll now for free sample tests & notes.",
+    "facebookUrl": "https://facebook.com",
+    "youtubeUrl": "https://youtube.com",
+    "telegramUrl": "https://t.me",
+    "instagramUrl": "https://instagram.com"
+  },
+  "videos": [
+    {
+      "id": "vid_1",
+      "title": "Class 10 Science: Chemical Reactions & Equations (रासायनिक अभिक्रियाएं)",
+      "class_id": "c_10",
+      "subject_id": "s_10_sci",
+      "chapter": "Chemical Reactions and Equations",
+      "teacher": "Er. R. K. Singh",
+      "duration": "45:30",
+      "views": "12.4K",
+      "video_url": "https://www.youtube.com/embed/dQw4w9WgXcQ",
+      "notes_pdf_url": "",
+      "description": "Complete breakdown of chemical equations, types of reactions, balancing equations with BSEB model questions."
+    },
+    {
+      "id": "vid_2",
+      "title": "Class 10 Mathematics: Real Numbers (वास्तविक संख्याएं)",
+      "class_id": "c_10",
+      "subject_id": "s_10_math",
+      "chapter": "Real Numbers",
+      "teacher": "Prof. A. K. Verma",
+      "duration": "38:15",
+      "views": "18.9K",
+      "video_url": "https://www.youtube.com/embed/dQw4w9WgXcQ",
+      "notes_pdf_url": "",
+      "description": "Euclid division lemma, Fundamental theorem of arithmetic, HCF & LCM problem shortcuts for matric exam."
+    },
+    {
+      "id": "vid_3",
+      "title": "Class 12 Physics: Electrostatics (विद्युत आवेश तथा क्षेत्र)",
+      "class_id": "c_12_science",
+      "subject_id": "s_12_phy",
+      "chapter": "Electrostatics",
+      "teacher": "Dr. S. K. Sharma",
+      "duration": "52:10",
+      "views": "24.1K",
+      "video_url": "https://www.youtube.com/embed/dQw4w9WgXcQ",
+      "notes_pdf_url": "",
+      "description": "Coulomb law, electric field lines, electric dipole and Gauss theorem applications for Inter exam."
+    }
   ]
 }

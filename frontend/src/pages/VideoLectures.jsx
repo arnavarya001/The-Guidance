@@ -14,7 +14,7 @@ export default function VideoLectures() {
 
   useEffect(() => {
     // Fetch classes
-    fetch('http://localhost:5050/api/courses/classes')
+    fetch('/api/courses/classes')
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data) && data.length > 0) {
@@ -45,7 +45,7 @@ export default function VideoLectures() {
   const fetchVideos = async () => {
     setLoading(true);
     try {
-      let url = `http://localhost:5050/api/videos?classId=${selectedClass}`;
+      let url = `/api/videos?classId=${selectedClass}`;
       if (searchQuery) url += `&search=${encodeURIComponent(searchQuery)}`;
       const res = await fetch(url);
       const data = await res.json();

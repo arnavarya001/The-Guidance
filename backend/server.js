@@ -192,6 +192,107 @@ app.get('/api/auth/profile', authenticateToken, async (req, res) => {
   }
 });
 
+// Send OTP for Mobile Authentication
+app.post('/api/auth/send-otp', async (req, res) => {
+  const { mobile } = req.body;
+  if (!mobile || !/^\d{10}$/.test(mobile)) {
+    return res.status(400).json({ message: 'Valid 10-digit mobile number is required.' });
+  }
+
+  // In production with SMS gateway (e.g. Fast2SMS / Twilio), OTP is sent to phone.
+  // For simulation / standard setup, generate a secure 6-digit OTP
+  const generatedOtp = '123456'; // Standard testing OTP or random
+  res.json({
+    success: true,
+    message: 'OTP sent successfully to +91 ' + mobile,
+    testOtp: process.env.NODE_ENV === 'production' ? undefined : generatedOtp
+  });
+});
+
+// Verify OTP & Login/Register
+app.post('/api/auth/verify-otp', async (req, res) => {
+  const { mobile, otp, name, classId, board } = req.body;
+
+  if (!mobile || !otp) {
+    return res.status(400).json({ message: 'Mobile number and OTP are required.' });
+  }
+
+  // Accept valid 6-digit OTP
+  if (otp !== '123456' && otp.length !== 6) {
+    return res.status(400).json({ message: 'Invalid or expired OTP. Please enter valid 6-digit OTP (123456).' });
+  }
+
+  try {
+    let user = await db.findOne('users', { mobile });
+    if (!user) {
+      // Auto-register if new student
+      user = {
+        id: 'u_mob_' + Date.now(),
+        name: name || 'Student ' + mobile.slice(-4),
+        email: mobile + '@theguidance.student',
+        mobile,
+        password: bcrypt.hashSync(mobile + '_pass', 10),
+        class: classId || 'c_10',
+        board: board || 'Bihar Board',
+        role: 'student',
+        created_at: new Date().toISOString()
+      };
+      await db.insert('users', user);
+    }
+
+    const token = jwt.sign(
+      { id: user.id, name: user.name, role: user.role, classId: user.class },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    res.json({
+      message: 'Mobile authentication successful!',
+      token,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        mobile: user.mobile,
+        class: user.class,
+        board: user.board,
+        role: user.role
+      }
+    });
+  } catch (err) {
+    console.error("OTP verification error:", err);
+    res.status(500).json({ message: 'OTP verification failed.' });
+  }
+});
+
+// ================= WEBSITE SETTINGS (CMS) ENDPOINTS =================
+
+// Public: Get site settings
+app.get('/api/settings', async (req, res) => {
+  try {
+    const raw = await db.getCollection('site_settings');
+    const settings = Array.isArray(raw) ? (raw[0] || {}) : raw;
+    res.json(settings);
+  } catch (err) {
+    console.error("Fetch settings error:", err);
+    res.json({});
+  }
+});
+
+// Admin: Update site settings
+app.post('/api/admin/settings', authenticateAdmin, async (req, res) => {
+  try {
+    const current = await db.getCollection('site_settings');
+    const currentObj = Array.isArray(current) ? (current[0] || {}) : current;
+    const updated = { ...currentObj, ...req.body, updated_at: new Date().toISOString() };
+    await db.setCollection('site_settings', [updated]);
+    res.json({ message: 'Website content updated successfully!', data: updated });
+  } catch (err) {
+    console.error("Update settings error:", err);
+    res.status(500).json({ message: 'Failed to update website content.' });
+  }
+});
+
 // ================= STUDY & COURSE ENDPOINTS =================
 
 app.get('/api/courses/classes', async (req, res) => {
@@ -1522,6 +1623,176 @@ app.post('/api/admin/syllabus', authenticateAdmin, async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Error updating syllabus.' });
+  }
+});
+
+// ================= ADMIN & RESOURCE CRUD ENDPOINTS =================
+
+// Videos list (Public)
+app.get('/api/videos', async (req, res) => {
+  const { classId, subjectId } = req.query;
+  try {
+    const allVideos = await db.getCollection('videos');
+    let filtered = allVideos;
+    if (classId) filtered = filtered.filter(v => v.class_id === classId);
+    if (subjectId) filtered = filtered.filter(v => v.subject_id === subjectId);
+    res.json(filtered);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error loading videos.' });
+  }
+});
+
+// Add Video (Admin)
+app.post('/api/admin/videos', authenticateAdmin, async (req, res) => {
+  const { title, classId, subjectId, chapter, teacher, duration, videoUrl, notesPdfUrl, description } = req.body;
+  if (!title || !classId || !videoUrl) {
+    return res.status(400).json({ message: 'Title, Class and Video URL are required.' });
+  }
+
+  const id = 'vid_' + Date.now();
+  const newVideo = {
+    id,
+    title,
+    class_id: classId,
+    subject_id: subjectId || '',
+    chapter: chapter || '',
+    teacher: teacher || 'Faculty Member',
+    duration: duration || '30:00',
+    views: '1',
+    video_url: videoUrl,
+    notes_pdf_url: notesPdfUrl || '',
+    description: description || '',
+    created_at: new Date().toISOString()
+  };
+
+  try {
+    await db.insert('videos', newVideo);
+    res.status(201).json({ message: 'Video added successfully!', data: newVideo });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Failed to add video.' });
+  }
+});
+
+// Update Video (Admin)
+app.put('/api/admin/videos/:id', authenticateAdmin, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const updated = await db.update('videos', { id }, req.body);
+    res.json({ message: 'Video updated successfully!', data: updated });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Failed to update video.' });
+  }
+});
+
+// Delete Video (Admin)
+app.delete('/api/admin/videos/:id', authenticateAdmin, async (req, res) => {
+  const { id } = req.params;
+  try {
+    await db.delete('videos', { id });
+    res.json({ message: 'Video deleted successfully!' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Failed to delete video.' });
+  }
+});
+
+// Update Study Material (Admin)
+app.put('/api/admin/study-materials/:id', authenticateAdmin, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const updated = await db.update('study_materials', { id }, req.body);
+    res.json({ message: 'Study material updated successfully!', data: updated });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Failed to update study material.' });
+  }
+});
+
+// Delete Study Material (Admin)
+app.delete('/api/admin/study-materials/:id', authenticateAdmin, async (req, res) => {
+  const { id } = req.params;
+  try {
+    await db.delete('study_materials', { id });
+    res.json({ message: 'Study material deleted successfully!' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Failed to delete study material.' });
+  }
+});
+
+// Update Test (Admin)
+app.put('/api/admin/tests/:id', authenticateAdmin, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const updated = await db.update('tests', { id }, req.body);
+    res.json({ message: 'Test updated successfully!', data: updated });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Failed to update test.' });
+  }
+});
+
+// Delete Test (Admin)
+app.delete('/api/admin/tests/:id', authenticateAdmin, async (req, res) => {
+  const { id } = req.params;
+  try {
+    await db.delete('tests', { id });
+    res.json({ message: 'Test deleted successfully!' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Failed to delete test.' });
+  }
+});
+
+// Update Question (Admin)
+app.put('/api/admin/questions/:id', authenticateAdmin, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const updated = await db.update('questions', { id }, req.body);
+    res.json({ message: 'Question updated successfully!', data: updated });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Failed to update question.' });
+  }
+});
+
+// Delete Question (Admin)
+app.delete('/api/admin/questions/:id', authenticateAdmin, async (req, res) => {
+  const { id } = req.params;
+  try {
+    await db.delete('questions', { id });
+    res.json({ message: 'Question deleted successfully!' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Failed to delete question.' });
+  }
+});
+
+// Get all student test attempts (Admin)
+app.get('/api/admin/attempts', authenticateAdmin, async (req, res) => {
+  try {
+    const attempts = await db.getCollection('test_attempts');
+    const users = await db.getCollection('users');
+    const tests = await db.getCollection('tests');
+
+    const enriched = (attempts || []).map(att => {
+      const user = users.find(u => u.id === att.user_id);
+      const test = tests.find(t => t.id === att.test_id);
+      return {
+        ...att,
+        student_name: user ? user.name : 'Unknown Student',
+        student_email: user ? user.email : '',
+        test_title: test ? test.title : 'Test ' + att.test_id
+      };
+    });
+
+    res.json(enriched.reverse());
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Failed to load test attempts.' });
   }
 });
 

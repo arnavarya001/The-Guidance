@@ -35,7 +35,20 @@ export default function Navbar({ onOpenAiDoubt, onOpenAiGuru }) {
     setUserDropdownOpen(false);
   };
 
-  const isActive = (hash) => currentHash === hash || (hash === '#home' && currentHash === '');
+  const isActive = (hash) => {
+    const cleanHash = currentHash.split('?')[0];
+    return cleanHash === hash || (hash === '#home' && (cleanHash === '' || cleanHash === '#'));
+  };
+
+  const navLinks = [
+    { hash: '#home', label: t('navHome'), icon: '🏠' },
+    { hash: '#syllabus', label: t('navSyllabus'), icon: '📖' },
+    { hash: '#study-material', label: t('navNotes'), icon: '📝' },
+    { hash: '#video-lectures', label: t('navVideos'), icon: '🎥' },
+    { hash: '#test-series', label: t('navTests'), icon: '⏱️' },
+    { hash: '#pyqs', label: t('navPyqs'), icon: '📜' },
+    { hash: '#daily-challenge', label: t('navDailyChallenge'), icon: '🔥', highlight: true }
+  ];
 
   return (
     <header style={{
@@ -43,345 +56,368 @@ export default function Navbar({ onOpenAiDoubt, onOpenAiGuru }) {
       top: 0,
       zIndex: 100,
       backgroundColor: 'var(--navbar-bg)',
-      backdropFilter: 'blur(12px)',
+      backdropFilter: 'blur(16px)',
+      WebkitBackdropFilter: 'blur(16px)',
       borderBottom: '1px solid var(--border)',
-      boxShadow: 'var(--shadow-sm)',
+      boxShadow: '0 2px 10px rgba(0, 0, 0, 0.04)',
       transition: 'var(--transition)'
     }}>
       <div className="container" style={{
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        height: '72px'
+        height: '72px',
+        padding: '0 20px'
       }}>
-        {/* Logo */}
-        <div onClick={() => navigateTo('#home')} style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '10px',
-          cursor: 'pointer'
-        }}>
+        {/* Professional Coaching Logo */}
+        <div 
+          onClick={() => navigateTo('#home')} 
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            cursor: 'pointer',
+            userSelect: 'none'
+          }}
+        >
+          {/* Custom SVG Education Crest */}
           <div style={{
-            width: '42px',
-            height: '42px',
+            width: '44px',
+            height: '44px',
             borderRadius: '12px',
-            background: 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)',
+            background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #6366f1 100%)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: 'white',
-            fontWeight: 'bold',
-            fontSize: '20px',
-            boxShadow: '0 4px 12px rgba(37, 99, 235, 0.35)'
+            boxShadow: '0 6px 16px rgba(37, 99, 235, 0.35)',
+            flexShrink: 0
           }}>
-            G
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+              {/* Graduation Cap / Book Crest */}
+              <path d="M12 3L1 9L12 15L21 10.09V17H23V9L12 3Z" fill="#ffffff" />
+              <path d="M5 13.18V17.18C5 19.94 8.13 22 12 22C15.87 22 19 19.94 19 17.18V13.18L12 17L5 13.18Z" fill="#facc15" />
+            </svg>
           </div>
           <div>
             <div style={{
               fontSize: '20px',
               fontWeight: 800,
               fontFamily: 'var(--font-heading)',
-              background: 'linear-gradient(to right, var(--primary), var(--secondary))',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              letterSpacing: '-0.5px',
-              lineHeight: 1.1
+              letterSpacing: '-0.4px',
+              lineHeight: 1.1,
+              color: 'var(--text-dark)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
             }}>
-              {t('brandTitle')}
+              <span>THE GUIDANCE</span>
+              <span style={{
+                fontSize: '10px',
+                fontWeight: 700,
+                background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
+                color: '#fff',
+                padding: '2px 6px',
+                borderRadius: '6px',
+                letterSpacing: '0.5px'
+              }}>BSEB</span>
             </div>
-            <div style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-light)', letterSpacing: '0.5px' }}>
-              {t('brandSubtitle')}
+            <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--gray)', letterSpacing: '0.4px' }}>
+              Bihar Board & CBSE Coaching Hub
             </div>
           </div>
         </div>
 
-        {/* Desktop Nav Links */}
+        {/* Desktop Nav Links with proper spacing */}
         <nav className="desktop-nav" style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '18px',
+          gap: '8px',
           fontWeight: 600,
           fontSize: '14px'
         }}>
-          <a
-            href="#home"
-            style={{
-              color: isActive('#home') ? 'var(--primary)' : 'var(--text-dark)',
-              borderBottom: isActive('#home') ? '2px solid var(--primary)' : '2px solid transparent',
-              paddingBottom: '4px'
-            }}
-          >
-            {t('navHome')}
-          </a>
-          <a
-            href="#syllabus"
-            style={{
-              color: isActive('#syllabus') ? 'var(--primary)' : 'var(--text-dark)',
-              borderBottom: isActive('#syllabus') ? '2px solid var(--primary)' : '2px solid transparent',
-              paddingBottom: '4px'
-            }}
-          >
-            {t('navSyllabus')}
-          </a>
-          <a
-            href="#study-material"
-            style={{
-              color: isActive('#study-material') ? 'var(--primary)' : 'var(--text-dark)',
-              borderBottom: isActive('#study-material') ? '2px solid var(--primary)' : '2px solid transparent',
-              paddingBottom: '4px'
-            }}
-          >
-            {t('navNotes')}
-          </a>
-          <a
-            href="#video-lectures"
-            style={{
-              color: isActive('#video-lectures') ? 'var(--primary)' : 'var(--text-dark)',
-              borderBottom: isActive('#video-lectures') ? '2px solid var(--primary)' : '2px solid transparent',
-              paddingBottom: '4px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px'
-            }}
-          >
-            <span>🎥</span> {t('navVideos')}
-          </a>
-          <a
-            href="#test-series"
-            style={{
-              color: isActive('#test-series') ? 'var(--primary)' : 'var(--text-dark)',
-              borderBottom: isActive('#test-series') ? '2px solid var(--primary)' : '2px solid transparent',
-              paddingBottom: '4px'
-            }}
-          >
-            {t('navTests')}
-          </a>
-          <a
-            href="#pyqs"
-            style={{
-              color: isActive('#pyqs') ? 'var(--primary)' : 'var(--text-dark)',
-              borderBottom: isActive('#pyqs') ? '2px solid var(--primary)' : '2px solid transparent',
-              paddingBottom: '4px'
-            }}
-          >
-            {t('navPyqs')}
-          </a>
-          <a
-            href="#daily-challenge"
-            style={{
-              color: isActive('#daily-challenge') ? '#f59e0b' : 'var(--text-dark)',
-              fontWeight: 700,
-              borderBottom: isActive('#daily-challenge') ? '2px solid #f59e0b' : '2px solid transparent',
-              paddingBottom: '4px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px'
-            }}
-          >
-            <span>🔥</span> {t('navDailyChallenge')}
-          </a>
+          {navLinks.map(link => {
+            const active = isActive(link.hash);
+            return (
+              <a
+                key={link.hash}
+                href={link.hash}
+                style={{
+                  color: link.highlight ? (active ? '#d97706' : '#f59e0b') : (active ? 'var(--primary)' : 'var(--text-dark)'),
+                  backgroundColor: active ? (link.highlight ? 'rgba(245, 158, 11, 0.1)' : 'var(--primary-light)') : 'transparent',
+                  padding: '8px 12px',
+                  borderRadius: '10px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  transition: 'var(--transition)',
+                  fontWeight: active ? 700 : 600,
+                  textDecoration: 'none'
+                }}
+              >
+                <span>{link.icon}</span>
+                <span>{link.label}</span>
+              </a>
+            );
+          })}
+
+          {/* Student Dashboard link (only when logged in) */}
           {user && (
             <a
               href="#dashboard"
               style={{
                 color: isActive('#dashboard') ? 'var(--primary)' : 'var(--text-dark)',
-                borderBottom: isActive('#dashboard') ? '2px solid var(--primary)' : '2px solid transparent',
-                paddingBottom: '4px'
+                backgroundColor: isActive('#dashboard') ? 'var(--primary-light)' : 'transparent',
+                padding: '8px 12px',
+                borderRadius: '10px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                transition: 'var(--transition)',
+                fontWeight: isActive('#dashboard') ? 700 : 600,
+                textDecoration: 'none'
               }}
             >
-              {t('navDashboard')}
+              <span>📊</span>
+              <span>{t('navDashboard')}</span>
             </a>
           )}
+
+          {/* Admin Panel link (PRIVATE: Only visible to verified Admin role) */}
           {user && user.role === 'admin' && (
-            <a href="#admin" style={{
-              color: 'var(--secondary)',
-              fontWeight: 700,
-              background: 'var(--secondary-light)',
-              padding: '4px 10px',
-              borderRadius: '6px'
-            }}>
-              {t('navAdmin')}
+            <a
+              href="#admin"
+              style={{
+                background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                color: '#ffffff',
+                padding: '8px 14px',
+                borderRadius: '10px',
+                fontWeight: 700,
+                fontSize: '13px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                boxShadow: '0 4px 10px rgba(245, 158, 11, 0.3)',
+                textDecoration: 'none',
+                transition: 'var(--transition)'
+              }}
+            >
+              <span>👑</span>
+              <span>Admin Console</span>
             </a>
           )}
         </nav>
 
-        {/* Right Section: Language Toggle + Theme Toggle + Auth / Profile */}
+        {/* Right Action Icons: Language, AI Guru, Theme, Auth */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          {/* Language Switcher Button (Hindi / English) */}
+          {/* Language Toggle */}
           <button
             onClick={toggleLanguage}
-            title={language === 'hi' ? 'Switch to English' : 'हिंदी में बदलें'}
+            className="btn btn-outline"
             style={{
-              background: 'var(--bg-card)',
-              border: '1px solid var(--border)',
-              borderRadius: '100px',
               padding: '6px 12px',
+              fontSize: '12px',
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
-              cursor: 'pointer',
-              fontSize: '12px',
-              fontWeight: 800,
-              color: 'var(--text-dark)',
-              transition: 'var(--transition)',
-              boxShadow: 'var(--shadow-sm)'
+              borderRadius: '20px',
+              borderColor: 'var(--border)'
             }}
+            title="Toggle Hindi / English"
           >
-            <span style={{ fontSize: '14px' }}>🌐</span>
-            <span>{language === 'hi' ? '🇮🇳 हिंदी' : '🇬🇧 English'}</span>
+            <span>🌐</span>
+            <span>{language === 'en' ? 'English' : 'हिंदी'}</span>
           </button>
 
-          {/* AI Doubt Quick Button */}
+          {/* AI Guru Trigger Button */}
           {handleOpenAi && (
             <button
               onClick={handleOpenAi}
-              className="desktop-nav"
+              className="btn"
               style={{
-                padding: '6px 12px',
-                borderRadius: '100px',
-                border: '1px solid var(--border)',
                 background: 'linear-gradient(135deg, var(--primary-light), var(--secondary-light))',
+                border: '1px solid var(--primary-glow)',
                 color: 'var(--primary)',
-                fontWeight: 700,
+                padding: '6px 12px',
                 fontSize: '12px',
-                cursor: 'pointer',
+                fontWeight: 700,
                 display: 'flex',
                 alignItems: 'center',
-                gap: '5px'
+                gap: '6px',
+                borderRadius: '20px',
+                cursor: 'pointer'
               }}
             >
-              <span>🤖</span> {t('navAiGuru')}
+              <span>🤖</span>
+              <span>{t('navAiGuru')}</span>
             </button>
           )}
 
-          {/* Theme Toggle Button */}
+          {/* Dark / Light Mode Toggle */}
           <button
             onClick={toggleTheme}
-            title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
             style={{
-              background: 'var(--bg-card)',
-              border: '1px solid var(--border)',
-              borderRadius: '50%',
-              width: '36px',
-              height: '36px',
+              background: 'transparent',
+              border: 'none',
+              fontSize: '18px',
+              cursor: 'pointer',
+              padding: '6px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              cursor: 'pointer',
-              fontSize: '16px',
-              color: 'var(--text-dark)',
-              transition: 'var(--transition)'
+              color: 'var(--text-dark)'
             }}
+            title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
           >
             {theme === 'light' ? '🌙' : '☀️'}
           </button>
 
+          {/* User Auth Info / Buttons */}
           {user ? (
             <div style={{ position: 'relative' }}>
-              <button 
+              <div
                 onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                className="btn btn-outline btn-sm"
-                style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 12px' }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  cursor: 'pointer',
+                  padding: '6px 12px',
+                  borderRadius: '10px',
+                  backgroundColor: 'var(--bg-card-hover)',
+                  border: '1px solid var(--border)'
+                }}
               >
                 <div style={{
-                  width: '24px',
-                  height: '24px',
+                  width: '28px',
+                  height: '28px',
                   borderRadius: '50%',
-                  backgroundColor: 'var(--primary)',
+                  backgroundColor: user.role === 'admin' ? '#f59e0b' : 'var(--primary)',
                   color: 'white',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: '12px',
-                  fontWeight: 'bold'
+                  fontWeight: 700,
+                  fontSize: '13px'
                 }}>
                   {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
                 </div>
-                <span className="desktop-nav" style={{ maxWidth: '90px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {user.name}
-                </span>
-                <span style={{ fontSize: '10px' }}>▼</span>
-              </button>
+                <div style={{ display: 'flex', flexDirection: 'column', textAlign: 'left' }}>
+                  <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-dark)' }}>
+                    {user.name ? user.name.split(' ')[0] : 'Student'}
+                  </span>
+                  <span style={{ fontSize: '10px', color: 'var(--gray)', textTransform: 'capitalize' }}>
+                    {user.role === 'admin' ? '👑 Admin' : (user.class || 'Student')}
+                  </span>
+                </div>
+                <span style={{ fontSize: '10px', color: 'var(--gray)' }}>▼</span>
+              </div>
 
-              {/* User Dropdown Menu */}
+              {/* Dropdown Menu */}
               {userDropdownOpen && (
                 <div style={{
                   position: 'absolute',
                   right: 0,
-                  top: '100%',
-                  marginTop: '8px',
+                  top: '110%',
+                  width: '220px',
                   backgroundColor: 'var(--bg-card)',
                   border: '1px solid var(--border)',
-                  borderRadius: 'var(--radius)',
-                  boxShadow: 'var(--shadow-lg)',
-                  width: '200px',
-                  padding: '8px 0',
-                  zIndex: 1000
+                  borderRadius: '14px',
+                  boxShadow: 'var(--shadow-premium)',
+                  padding: '8px',
+                  zIndex: 200,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '4px'
                 }}>
-                  <div style={{ padding: '8px 16px', borderBottom: '1px solid var(--border)' }}>
-                    <div style={{ fontWeight: 700, fontSize: '14px', color: 'var(--text-dark)' }}>{user.name}</div>
-                    <div style={{ fontSize: '12px', color: 'var(--text-light)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user.email}</div>
-                    <div style={{ fontSize: '11px', color: 'var(--primary)', fontWeight: 600, marginTop: '4px', textTransform: 'capitalize' }}>
-                      {user.class ? user.class.replace('c_', 'Class ') : 'Student'}
-                    </div>
+                  <div style={{ padding: '8px 12px', borderBottom: '1px solid var(--border)', marginBottom: '4px' }}>
+                    <div style={{ fontWeight: 700, fontSize: '14px' }}>{user.name}</div>
+                    <div style={{ fontSize: '12px', color: 'var(--gray)' }}>{user.email || user.mobile}</div>
                   </div>
-                  <div 
+
+                  <button
                     onClick={() => navigateTo('#dashboard')}
-                    style={{ padding: '10px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', color: 'var(--text-dark)' }}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      padding: '8px 12px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      background: 'transparent',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      fontSize: '13px',
+                      color: 'var(--text-dark)'
+                    }}
                   >
-                    <span>📊</span> {t('navDashboard')}
-                  </div>
-                  <div 
-                    onClick={() => navigateTo('#results')}
-                    style={{ padding: '10px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', color: 'var(--text-dark)' }}
-                  >
-                    <span>📈</span> {t('navResults')}
-                  </div>
-                  <div style={{ borderTop: '1px solid var(--border)', margin: '4px 0' }} />
-                  <div 
-                    onClick={logout}
-                    style={{ padding: '10px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', color: 'var(--danger)' }}
-                  >
-                    <span>🚪</span> {t('navLogout')}
+                    <span>📊</span> Student Profile & Results
+                  </button>
+
+                  {user.role === 'admin' && (
+                    <button
+                      onClick={() => navigateTo('#admin')}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        padding: '8px 12px',
+                        borderRadius: '8px',
+                        border: 'none',
+                        background: 'rgba(245, 158, 11, 0.1)',
+                        textAlign: 'left',
+                        cursor: 'pointer',
+                        fontSize: '13px',
+                        color: '#d97706',
+                        fontWeight: 700
+                      }}
+                    >
+                      <span>👑</span> Admin Control Panel
+                    </button>
+                  )}
+
+                  <div style={{ borderTop: '1px solid var(--border)', marginTop: '4px', paddingTop: '4px' }}>
+                    <button
+                      onClick={() => {
+                        logout();
+                        setUserDropdownOpen(false);
+                        window.location.hash = '#home';
+                      }}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        padding: '8px 12px',
+                        borderRadius: '8px',
+                        border: 'none',
+                        background: 'transparent',
+                        textAlign: 'left',
+                        cursor: 'pointer',
+                        fontSize: '13px',
+                        color: 'var(--danger)',
+                        width: '100%'
+                      }}
+                    >
+                      <span>🚪</span> Logout
+                    </button>
                   </div>
                 </div>
               )}
             </div>
           ) : (
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-              <button 
-                onClick={() => {
-                  const adminUser = {
-                    id: 'u_admin',
-                    name: 'Admin The Guidance',
-                    email: 'admin@theguidance.com',
-                    mobile: '9999999999',
-                    class: 'All',
-                    board: 'Bihar Board',
-                    role: 'admin'
-                  };
-                  localStorage.setItem('the_guidance_user', JSON.stringify(adminUser));
-                  localStorage.setItem('the_guidance_token', 'admin_session_' + Date.now());
-                  window.location.hash = '#admin';
-                  window.location.reload();
-                }} 
-                className="btn btn-sm desktop-nav"
-                style={{ 
-                  background: 'linear-gradient(135deg, #f59e0b, #d97706)', 
-                  color: 'white', 
-                  border: 'none', 
-                  fontWeight: 700,
-                  boxShadow: '0 2px 8px rgba(245, 158, 11, 0.3)'
-                }}
-                title="1-Click Admin Access"
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <button
+                onClick={() => navigateTo('#login')}
+                className="btn btn-outline"
+                style={{ padding: '6px 14px', fontSize: '13px', borderRadius: '10px' }}
               >
-                👑 Admin
-              </button>
-              <button onClick={() => navigateTo('#login')} className="btn btn-outline btn-sm">
                 {t('navLogin')}
               </button>
-              <button onClick={() => navigateTo('#signup')} className="btn btn-primary btn-sm desktop-nav">
-                {t('navSignUp')}
+              <button
+                onClick={() => navigateTo('#signup')}
+                className="btn btn-primary"
+                style={{ padding: '6px 14px', fontSize: '13px', borderRadius: '10px' }}
+              >
+                {t('navSignup')}
               </button>
             </div>
           )}
@@ -389,13 +425,14 @@ export default function Navbar({ onOpenAiDoubt, onOpenAiGuru }) {
           {/* Mobile Hamburger Toggle Button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="mobile-nav-toggle"
+            className="mobile-toggle"
             style={{
-              background: 'none',
+              background: 'transparent',
               border: 'none',
               fontSize: '24px',
               cursor: 'pointer',
               display: 'none',
+              padding: '4px',
               color: 'var(--text-dark)'
             }}
           >
@@ -408,59 +445,75 @@ export default function Navbar({ onOpenAiDoubt, onOpenAiGuru }) {
       {mobileMenuOpen && (
         <div style={{
           backgroundColor: 'var(--bg-card)',
-          borderBottom: '1px solid var(--border)',
-          padding: '16px 24px',
+          borderTop: '1px solid var(--border)',
+          padding: '16px 20px',
           display: 'flex',
           flexDirection: 'column',
-          gap: '12px'
+          gap: '8px',
+          boxShadow: 'var(--shadow-lg)'
         }}>
-          <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
-            <button
-              onClick={toggleLanguage}
+          {navLinks.map(link => (
+            <div
+              key={link.hash}
+              onClick={() => navigateTo(link.hash)}
               style={{
-                flex: 1,
-                padding: '8px',
-                borderRadius: '8px',
-                border: '1px solid var(--border)',
-                background: 'var(--bg)',
-                fontWeight: 700,
-                color: 'var(--primary)'
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                padding: '10px 14px',
+                borderRadius: '10px',
+                backgroundColor: isActive(link.hash) ? 'var(--primary-light)' : 'transparent',
+                color: isActive(link.hash) ? 'var(--primary)' : 'var(--text-dark)',
+                fontWeight: isActive(link.hash) ? 700 : 600,
+                fontSize: '14px',
+                cursor: 'pointer'
               }}
             >
-              🌐 {language === 'hi' ? 'Switch to English' : 'हिंदी भाषा चुनें'}
-            </button>
-            {handleOpenAi && (
-              <button
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  handleOpenAi();
-                }}
-                style={{
-                  flex: 1,
-                  padding: '8px',
-                  borderRadius: '8px',
-                  border: '1px solid var(--primary)',
-                  background: 'var(--primary-light)',
-                  color: 'var(--primary)',
-                  fontWeight: 700
-                }}
-              >
-                🤖 {t('navAiGuru')}
-              </button>
-            )}
-          </div>
+              <span>{link.icon}</span>
+              <span>{link.label}</span>
+            </div>
+          ))}
 
-          <a onClick={() => navigateTo('#home')} style={{ padding: '8px 0', fontWeight: 600, color: 'var(--text-dark)', cursor: 'pointer' }}>{t('navHome')}</a>
-          <a onClick={() => navigateTo('#syllabus')} style={{ padding: '8px 0', fontWeight: 600, color: 'var(--text-dark)', cursor: 'pointer' }}>{t('navSyllabus')}</a>
-          <a onClick={() => navigateTo('#study-material')} style={{ padding: '8px 0', fontWeight: 600, color: 'var(--text-dark)', cursor: 'pointer' }}>{t('navNotes')}</a>
-          <a onClick={() => navigateTo('#video-lectures')} style={{ padding: '8px 0', fontWeight: 600, color: 'var(--text-dark)', cursor: 'pointer' }}>🎥 {t('navVideos')}</a>
-          <a onClick={() => navigateTo('#test-series')} style={{ padding: '8px 0', fontWeight: 600, color: 'var(--text-dark)', cursor: 'pointer' }}>{t('navTests')}</a>
-          <a onClick={() => navigateTo('#pyqs')} style={{ padding: '8px 0', fontWeight: 600, color: 'var(--text-dark)', cursor: 'pointer' }}>{t('navPyqs')}</a>
-          <a onClick={() => navigateTo('#daily-challenge')} style={{ padding: '8px 0', fontWeight: 700, color: '#f59e0b', cursor: 'pointer' }}>🔥 {t('navDailyChallenge')}</a>
           {user && (
-            <a onClick={() => navigateTo('#dashboard')} style={{ padding: '8px 0', fontWeight: 600, color: 'var(--primary)', cursor: 'pointer' }}>
-              📊 {t('navDashboard')}
-            </a>
+            <div
+              onClick={() => navigateTo('#dashboard')}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                padding: '10px 14px',
+                borderRadius: '10px',
+                backgroundColor: isActive('#dashboard') ? 'var(--primary-light)' : 'transparent',
+                color: isActive('#dashboard') ? 'var(--primary)' : 'var(--text-dark)',
+                fontWeight: 700,
+                fontSize: '14px',
+                cursor: 'pointer'
+              }}
+            >
+              <span>📊</span>
+              <span>{t('navDashboard')}</span>
+            </div>
+          )}
+
+          {user && user.role === 'admin' && (
+            <div
+              onClick={() => navigateTo('#admin')}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                padding: '10px 14px',
+                borderRadius: '10px',
+                backgroundColor: 'rgba(245, 158, 11, 0.15)',
+                color: '#d97706',
+                fontWeight: 700,
+                fontSize: '14px',
+                cursor: 'pointer'
+              }}
+            >
+              <span>👑</span>
+              <span>Admin Panel</span>
+            </div>
           )}
         </div>
       )}

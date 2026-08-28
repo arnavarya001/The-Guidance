@@ -20,34 +20,33 @@ export default function Dashboard({ onOpenAiDoubt }) {
     const fetchData = async () => {
       try {
         // Fetch analytics
-        const anaRes = await fetch('http://localhost:5050/api/analytics', {
+        const anaRes = await fetch('/api/analytics', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const anaData = await anaRes.json();
-        setAnalytics(anaData);
+        setAnalytics(anaData && typeof anaData === 'object' ? anaData : null);
 
         // Fetch history
-        const histRes = await fetch('http://localhost:5050/api/results/history', {
+        const histRes = await fetch('/api/results/history', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const histData = await histRes.json();
         setHistory(Array.isArray(histData) ? histData.sort((a,b) => new Date(b.attempted_at) - new Date(a.attempted_at)).slice(0, 4) : []);
 
         // Fetch all classes
-        const clsRes = await fetch('http://localhost:5050/api/courses/classes');
+        const clsRes = await fetch('/api/courses/classes');
         const clsData = await clsRes.json();
         setClasses(Array.isArray(clsData) ? clsData : []);
 
         // Fetch tests for student's class
-        if (user && user.class) {
-          const testRes = await fetch(`http://localhost:5050/api/tests?classId=${user.class}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-          });
-          const testData = await testRes.json();
-          setAvailableTests(Array.isArray(testData) ? testData.slice(0, 3) : []);
-        }
+        const targetClass = (user && user.class) ? user.class : 'c_10';
+        const testRes = await fetch(`/api/tests?classId=${targetClass}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const testData = await testRes.json();
+        setAvailableTests(Array.isArray(testData) ? testData.slice(0, 3) : []);
       } catch (e) {
-        console.error("Failed to load dashboard data", e);
+        console.warn("Failed to load dashboard data, using safe defaults", e);
       } finally {
         setLoading(false);
       }

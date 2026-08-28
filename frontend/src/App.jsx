@@ -19,57 +19,165 @@ import PYQs from './pages/PYQs';
 import VideoLectures from './pages/VideoLectures';
 import DailyChallenge from './pages/DailyChallenge';
 
-function AppFooter() {
+function AppFooter({ settings }) {
   const { t } = useLanguage();
+  const phone = settings?.phone || '+91 98765 43210';
+  const email = settings?.email || 'contact@theguidance.com';
+  const address = settings?.address || 'Bari Path, Near Patna College, Patna, Bihar - 800004';
+  const coachingName = settings?.coachingName || 'THE GUIDANCE';
+
   return (
     <footer style={{
       background: 'var(--dark)',
       color: 'white',
-      padding: '40px 24px',
+      padding: '48px 24px 32px',
       marginTop: 'auto',
       borderTop: '1px solid var(--border)'
     }}>
-      <div style={{ maxWidth: '1200px', margin: '0 auto', textAlign: 'center' }}>
-        <h3 style={{ color: 'white', marginBottom: '8px', fontWeight: 800 }}>THE GUIDANCE</h3>
-        <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '13px', marginBottom: '24px' }}>
-          {t('footerDesc')}
-        </p>
+      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
         <div style={{
-          display: 'flex',
-          justifyContent: 'center',
-          flexWrap: 'wrap',
-          gap: '20px',
-          marginBottom: '24px',
-          fontWeight: 600
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+          gap: '36px',
+          marginBottom: '36px'
         }}>
-          <a href="#home" style={{ color: 'white' }}>{t('navHome')}</a>
-          <a href="#syllabus" style={{ color: 'white' }}>{t('navSyllabus')}</a>
-          <a href="#study-material" style={{ color: 'white' }}>{t('navNotes')}</a>
-          <a href="#video-lectures" style={{ color: 'white' }}>{t('navVideos')}</a>
-          <a href="#test-series" style={{ color: 'white' }}>{t('navTests')}</a>
-          <a href="#pyqs" style={{ color: 'white' }}>{t('navPyqs')}</a>
-          <a href="#daily-challenge" style={{ color: '#f59e0b' }}>{t('navDailyChallenge')}</a>
+          {/* Brand Info */}
+          <div>
+            <h3 style={{ color: 'white', marginBottom: '12px', fontWeight: 800, fontSize: '20px' }}>
+              {coachingName}
+            </h3>
+            <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '13px', lineHeight: 1.6, marginBottom: '16px' }}>
+              {settings?.coachingDesc || t('footerDesc')}
+            </p>
+            <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.6)', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <div>📍 {address}</div>
+              <div>📞 {phone}</div>
+              <div>✉️ {email}</div>
+            </div>
+          </div>
+
+          {/* Quick Academic Links */}
+          <div>
+            <h4 style={{ color: '#facc15', fontSize: '15px', fontWeight: 700, marginBottom: '14px' }}>
+              Academic Portal
+            </h4>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px' }}>
+              <a href="#syllabus" style={{ color: 'rgba(255,255,255,0.85)', textDecoration: 'none' }}>📖 Bihar Board Syllabus</a>
+              <a href="#study-material" style={{ color: 'rgba(255,255,255,0.85)', textDecoration: 'none' }}>📝 Chapter Notes & PDF Books</a>
+              <a href="#video-lectures" style={{ color: 'rgba(255,255,255,0.85)', textDecoration: 'none' }}>🎥 Video Classes & Lectures</a>
+              <a href="#test-series" style={{ color: 'rgba(255,255,255,0.85)', textDecoration: 'none' }}>⏱️ Chapter Mock Tests</a>
+              <a href="#pyqs" style={{ color: 'rgba(255,255,255,0.85)', textDecoration: 'none' }}>📜 5-Year Past Papers (PYQ)</a>
+            </div>
+          </div>
+
+          {/* Student Support */}
+          <div>
+            <h4 style={{ color: '#60a5fa', fontSize: '15px', fontWeight: 700, marginBottom: '14px' }}>
+              Student Services
+            </h4>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px' }}>
+              <a href="#daily-challenge" style={{ color: '#f59e0b', fontWeight: 600, textDecoration: 'none' }}>🔥 Daily Challenge & Quiz</a>
+              <a href="#login" style={{ color: 'rgba(255,255,255,0.85)', textDecoration: 'none' }}>🔑 Student Sign In / OTP</a>
+              <a href="#dashboard" style={{ color: 'rgba(255,255,255,0.85)', textDecoration: 'none' }}>📊 Performance Analytics</a>
+              <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px' }}>🤖 24/7 AI Doubt Solver Active</span>
+            </div>
+          </div>
         </div>
-        <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '24px', fontSize: '12px' }}>
-          {t('footerCopyright')}
+
+        <div style={{
+          borderTop: '1px solid rgba(255,255,255,0.1)',
+          paddingTop: '24px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '12px',
+          fontSize: '12px',
+          color: 'rgba(255,255,255,0.5)'
+        }}>
+          <div>
+            © {new Date().getFullYear()} {coachingName}. All Rights Reserved. Built for Bihar Board & CBSE Excellence.
+          </div>
+          <div style={{ display: 'flex', gap: '16px' }}>
+            <a href="#home" style={{ color: 'rgba(255,255,255,0.6)' }}>Home</a>
+            <a href="#study-material" style={{ color: 'rgba(255,255,255,0.6)' }}>Materials</a>
+            <a href="#test-series" style={{ color: 'rgba(255,255,255,0.6)' }}>Tests</a>
+          </div>
         </div>
       </div>
     </footer>
   );
 }
 
+function AdminAccessDenied() {
+  return (
+    <div className="container section" style={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: 'calc(100vh - 140px)',
+      padding: '40px 20px'
+    }}>
+      <div className="card glass" style={{
+        maxWidth: '480px',
+        width: '100%',
+        padding: '40px',
+        textAlign: 'center',
+        borderRadius: '20px',
+        boxShadow: 'var(--shadow-premium)'
+      }}>
+        <div style={{ fontSize: '54px', marginBottom: '16px' }}>🔒</div>
+        <h2 style={{ fontSize: '24px', fontWeight: 800, marginBottom: '8px', color: 'var(--danger)' }}>
+          Admin Access Required
+        </h2>
+        <p style={{ color: 'var(--gray)', fontSize: '14px', lineHeight: 1.6, marginBottom: '24px' }}>
+          This administrative control console is restricted. Only authorized coaching administrators with verified credentials may access this area.
+        </p>
+        <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+          <button
+            onClick={() => window.location.hash = '#login'}
+            className="btn btn-primary"
+            style={{ padding: '10px 20px', fontWeight: 700 }}
+          >
+            🔑 Admin Login
+          </button>
+          <button
+            onClick={() => window.location.hash = '#home'}
+            className="btn btn-outline"
+            style={{ padding: '10px 20px' }}
+          >
+            🏠 Return Home
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function AppContent() {
   const [currentPath, setCurrentPath] = useState(window.location.hash || '#home');
   const [isAiDoubtOpen, setIsAiDoubtOpen] = useState(false);
+  const [settings, setSettings] = useState(null);
   const { user } = useAuth();
   const { t } = useLanguage();
 
   useEffect(() => {
     const handleHashChange = () => {
       setCurrentPath(window.location.hash || '#home');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     };
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  // Fetch CMS site settings
+  useEffect(() => {
+    fetch('/api/settings')
+      .then(res => res.json())
+      .then(data => {
+        if (data && typeof data === 'object') setSettings(data);
+      })
+      .catch(err => console.warn('Could not load site settings:', err));
   }, []);
 
   // Parse routing
@@ -105,7 +213,7 @@ function AppContent() {
     <>
       <Navbar onOpenAiGuru={() => setIsAiDoubtOpen(true)} />
       <main style={{ minHeight: 'calc(100vh - 70px)' }}>
-        {route.page === 'home' && <Home />}
+        {route.page === 'home' && <Home settings={settings} />}
         {route.page === 'auth' && <Auth mode={route.mode} />}
         {route.page === 'dashboard' && <Dashboard />}
         {route.page === 'syllabus' && <Syllabus />}
@@ -117,7 +225,13 @@ function AppContent() {
         {route.page === 'test-engine' && <TestEngine testId={route.id} />}
         {route.page === 'results' && <Results resultId={route.id} />}
         {route.page === 'analytics' && <Analytics />}
-        {route.page === 'admin' && <AdminPanel />}
+        {route.page === 'admin' && (
+          user && user.role === 'admin' ? (
+            <AdminPanel settings={settings} onSettingsUpdated={(s) => setSettings(s)} />
+          ) : (
+            <AdminAccessDenied />
+          )
+        )}
       </main>
 
       {/* Floating AI Guru Trigger Button */}
@@ -136,7 +250,7 @@ function AppContent() {
         onClose={() => setIsAiDoubtOpen(false)}
       />
 
-      {route.page !== 'test-engine' && <AppFooter />}
+      {route.page !== 'test-engine' && <AppFooter settings={settings} />}
     </>
   );
 }

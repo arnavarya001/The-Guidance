@@ -23,11 +23,11 @@ export default function DailyChallenge() {
 
   const fetchChallenge = async () => {
     try {
-      const res = await fetch('http://localhost:5050/api/daily-challenge');
+      const res = await fetch('/api/daily-challenge');
       const data = await res.json();
       setChallengeData(data);
     } catch (err) {
-      console.error('Error fetching daily challenge:', err);
+      console.warn('Error fetching daily challenge:', err);
     } finally {
       setLoading(false);
     }
@@ -35,11 +35,11 @@ export default function DailyChallenge() {
 
   const fetchLeaderboard = async () => {
     try {
-      const res = await fetch('http://localhost:5050/api/leaderboard');
+      const res = await fetch('/api/leaderboard');
       const data = await res.json();
-      setLeaderboardData(data);
+      setLeaderboardData(Array.isArray(data) ? data : []);
     } catch (err) {
-      console.error('Error fetching leaderboard:', err);
+      console.warn('Error fetching leaderboard:', err);
     }
   };
 
@@ -59,7 +59,7 @@ export default function DailyChallenge() {
 
     setSubmitting(true);
     try {
-      const res = await fetch('http://localhost:5050/api/daily-challenge/submit', {
+      const res = await fetch('/api/daily-challenge/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ answers: selectedAnswers })
