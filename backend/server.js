@@ -1530,8 +1530,10 @@ app.get('/', (req, res) => {
 });
 
 // Launch public source checker on startup
-pyqFetcher.startScheduler();
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`Backend server running on http://localhost:${PORT}`);
+  });
+}
 
-app.listen(PORT, () => {
-  console.log(`Backend server running on http://localhost:${PORT}`);
-});
+module.exports = app;
