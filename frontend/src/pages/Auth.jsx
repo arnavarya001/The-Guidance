@@ -48,17 +48,74 @@ export default function Auth({ mode = 'login' }) {
     setSuccess('');
     setLoading(true);
 
-    if (!email || !password) {
+    const cleanEmail = (email || '').trim().toLowerCase();
+    const cleanPassword = (password || '').trim();
+
+    if (!cleanEmail || !cleanPassword) {
       setError('Please fill in all fields.');
       setLoading(false);
       return;
     }
 
+    // 1. Instant Admin Access (Guaranteed to work across all platforms/Vercel/Offline)
+    if (cleanEmail === 'admin@theguidance.com' && cleanPassword === 'admin123') {
+      setSuccess('Logged in as Administrator!');
+      const adminUser = {
+        id: 'u_admin',
+        name: 'Admin The Guidance',
+        email: 'admin@theguidance.com',
+        mobile: '9999999999',
+        class: 'All',
+        board: 'Bihar Board',
+        role: 'admin'
+      };
+      setTimeout(() => {
+        login(adminUser, 'admin_session_token_' + Date.now());
+        window.location.hash = '#admin';
+        setLoading(false);
+      }, 400);
+      return;
+    }
+
+    // 2. Demo Student Instant Access
+    if (cleanEmail === 'student@theguidance.com' || (cleanEmail === 'aarav@gmail.com' && cleanPassword === '123456')) {
+      setSuccess('Logged in as Demo Student!');
+      const studentUser = {
+        id: 'u_student1',
+        name: 'Aarav Kumar',
+        email: cleanEmail,
+        mobile: '9876543210',
+        class: 'c_10',
+        board: 'Bihar Board',
+        role: 'student'
+      };
+      setTimeout(() => {
+        login(studentUser, 'student_session_token_' + Date.now());
+        window.location.hash = '#dashboard';
+        setLoading(false);
+      }, 400);
+      return;
+    }
+
+    // 3. Check registered users in local storage
+    const localUsers = JSON.parse(localStorage.getItem('the_guidance_users') || '[]');
+    const matched = localUsers.find(u => u.email.toLowerCase() === cleanEmail && u.password === cleanPassword);
+    if (matched) {
+      setSuccess('Logged in successfully!');
+      setTimeout(() => {
+        login(matched, 'local_session_token_' + Date.now());
+        window.location.hash = matched.role === 'admin' ? '#admin' : '#dashboard';
+        setLoading(false);
+      }, 400);
+      return;
+    }
+
+    // 4. Try Backend API
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email: cleanEmail, password: cleanPassword })
       });
       const data = await res.json();
       
@@ -67,44 +124,12 @@ export default function Auth({ mode = 'login' }) {
         setTimeout(() => {
           login(data.user, data.token);
           window.location.hash = data.user.role === 'admin' ? '#admin' : '#dashboard';
-        }, 800);
-        return;
+        }, 400);
       } else {
-        setError(data.message || 'Login failed.');
+        setError(data.message || 'Invalid credentials.');
       }
     } catch (err) {
-      // Fallback for direct Vercel static deployment or offline backend
-      if (email.toLowerCase() === 'admin@theguidance.com' && password === 'admin123') {
-        setSuccess('Logged in as Administrator!');
-        const adminUser = {
-          id: 'u_admin',
-          name: 'Admin The Guidance',
-          email: 'admin@theguidance.com',
-          mobile: '9999999999',
-          class: 'All',
-          board: 'Bihar Board',
-          role: 'admin'
-        };
-        setTimeout(() => {
-          login(adminUser, 'admin_jwt_session_' + Date.now());
-          window.location.hash = '#admin';
-        }, 800);
-        return;
-      }
-
-      // Check registered users in local storage
-      const localUsers = JSON.parse(localStorage.getItem('the_guidance_users') || '[]');
-      const matched = localUsers.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
-      if (matched) {
-        setSuccess('Logged in successfully!');
-        setTimeout(() => {
-          login(matched, 'local_jwt_session_' + Date.now());
-          window.location.hash = matched.role === 'admin' ? '#admin' : '#dashboard';
-        }, 800);
-        return;
-      }
-
-      setError('Invalid credentials. For Admin, use admin@theguidance.com / admin123');
+      setError('Invalid email or password. For Admin login, use admin@theguidance.com / admin123');
     } finally {
       setLoading(false);
     }
