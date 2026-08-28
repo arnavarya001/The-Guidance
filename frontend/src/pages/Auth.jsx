@@ -328,7 +328,41 @@ export default function Auth({ mode = 'login' }) {
               {loading ? 'Logging in...' : 'Sign In'}
             </button>
 
-            <div style={{ marginTop: '24px', textAlign: 'center', fontSize: '14px' }}>
+            <div style={{ margin: '14px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ flex: 1, height: '1px', background: 'var(--border)' }}></div>
+              <span style={{ fontSize: '12px', color: 'var(--gray)' }}>OR QUICK ACCESS</span>
+              <div style={{ flex: 1, height: '1px', background: 'var(--border)' }}></div>
+            </div>
+
+            <button 
+              type="button" 
+              onClick={() => {
+                const adminUser = {
+                  id: 'u_admin',
+                  name: 'Admin The Guidance',
+                  email: 'admin@theguidance.com',
+                  mobile: '9999999999',
+                  class: 'All',
+                  board: 'Bihar Board',
+                  role: 'admin'
+                };
+                login(adminUser, 'admin_session_' + Date.now());
+                window.location.hash = '#admin';
+              }} 
+              className="btn" 
+              style={{ 
+                width: '100%', 
+                background: 'linear-gradient(135deg, #f59e0b, #d97706)', 
+                color: 'white', 
+                border: 'none',
+                fontWeight: 700,
+                boxShadow: '0 4px 12px rgba(245, 158, 11, 0.3)'
+              }}
+            >
+              👑 Instant 1-Click Admin Access
+            </button>
+
+            <div style={{ marginTop: '20px', textAlign: 'center', fontSize: '14px' }}>
               Don't have an account?{' '}
               <span 
                 onClick={() => setAuthMode('signup')} 
