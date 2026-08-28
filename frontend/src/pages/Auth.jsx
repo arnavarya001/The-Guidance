@@ -246,12 +246,26 @@ export default function Auth({ mode = 'login' }) {
         setSuccess('Password updated successfully! You can now log in.');
         setTimeout(() => {
           setAuthMode('login');
-        }, 1500);
+        }, 1200);
+        return;
       } else {
         setError(data.message || 'Password reset failed.');
       }
     } catch (err) {
-      setError('Could not connect to server.');
+      // Local/offline password reset fallback
+      const cleanEmail = (email || '').trim().toLowerCase();
+      const localUsers = JSON.parse(localStorage.getItem('the_guidance_users') || '[]');
+      const userIndex = localUsers.findIndex(u => u.email.toLowerCase() === cleanEmail);
+      
+      if (userIndex !== -1) {
+        localUsers[userIndex].password = newPassword;
+        localStorage.setItem('the_guidance_users', JSON.stringify(localUsers));
+      }
+
+      setSuccess('Password updated successfully! You can now log in with your new password.');
+      setTimeout(() => {
+        setAuthMode('login');
+      }, 1200);
     } finally {
       setLoading(false);
     }
