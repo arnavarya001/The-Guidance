@@ -62,12 +62,16 @@ export default function Navbar({ onOpenAiDoubt, onOpenAiGuru }) {
       boxShadow: '0 2px 10px rgba(0, 0, 0, 0.04)',
       transition: 'var(--transition)'
     }}>
-      <div className="container" style={{
+      <div style={{
+        maxWidth: '1440px',
+        margin: '0 auto',
+        width: '100%',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
         height: '72px',
-        padding: '0 20px'
+        padding: '0 20px',
+        gap: '12px'
       }}>
         {/* Professional Coaching Logo */}
         <div 
@@ -75,65 +79,68 @@ export default function Navbar({ onOpenAiDoubt, onOpenAiGuru }) {
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '12px',
+            gap: '10px',
             cursor: 'pointer',
-            userSelect: 'none'
+            userSelect: 'none',
+            flexShrink: 0
           }}
         >
           {/* Custom SVG Education Crest */}
           <div style={{
-            width: '44px',
-            height: '44px',
-            borderRadius: '12px',
+            width: '40px',
+            height: '40px',
+            borderRadius: '10px',
             background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #6366f1 100%)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: '0 6px 16px rgba(37, 99, 235, 0.35)',
+            boxShadow: '0 4px 12px rgba(37, 99, 235, 0.3)',
             flexShrink: 0
           }}>
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-              {/* Graduation Cap / Book Crest */}
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
               <path d="M12 3L1 9L12 15L21 10.09V17H23V9L12 3Z" fill="#ffffff" />
               <path d="M5 13.18V17.18C5 19.94 8.13 22 12 22C15.87 22 19 19.94 19 17.18V13.18L12 17L5 13.18Z" fill="#facc15" />
             </svg>
           </div>
           <div>
             <div style={{
-              fontSize: '20px',
+              fontSize: '18px',
               fontWeight: 800,
               fontFamily: 'var(--font-heading)',
-              letterSpacing: '-0.4px',
+              letterSpacing: '-0.3px',
               lineHeight: 1.1,
               color: 'var(--text-dark)',
               display: 'flex',
               alignItems: 'center',
-              gap: '6px'
+              gap: '6px',
+              whiteSpace: 'nowrap'
             }}>
               <span>THE GUIDANCE</span>
               <span style={{
-                fontSize: '10px',
+                fontSize: '9px',
                 fontWeight: 700,
                 background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
                 color: '#fff',
-                padding: '2px 6px',
-                borderRadius: '6px',
+                padding: '2px 5px',
+                borderRadius: '4px',
                 letterSpacing: '0.5px'
               }}>BSEB</span>
             </div>
-            <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--gray)', letterSpacing: '0.4px' }}>
-              Bihar Board & CBSE Coaching Hub
+            <div style={{ fontSize: '10px', fontWeight: 600, color: 'var(--gray)', letterSpacing: '0.3px', whiteSpace: 'nowrap' }}>
+              Coaching & Board Hub
             </div>
           </div>
         </div>
 
-        {/* Desktop Nav Links with proper spacing */}
+        {/* Desktop Nav Links with perfect horizontal alignment & no wrapping */}
         <nav className="desktop-nav" style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '8px',
+          gap: '4px',
           fontWeight: 600,
-          fontSize: '14px'
+          fontSize: '13px',
+          whiteSpace: 'nowrap',
+          flexWrap: 'nowrap'
         }}>
           {navLinks.map(link => {
             const active = isActive(link.hash);
@@ -144,17 +151,19 @@ export default function Navbar({ onOpenAiDoubt, onOpenAiGuru }) {
                 style={{
                   color: link.highlight ? (active ? '#d97706' : '#f59e0b') : (active ? 'var(--primary)' : 'var(--text-dark)'),
                   backgroundColor: active ? (link.highlight ? 'rgba(245, 158, 11, 0.1)' : 'var(--primary-light)') : 'transparent',
-                  padding: '8px 12px',
-                  borderRadius: '10px',
-                  display: 'flex',
+                  padding: '6px 10px',
+                  borderRadius: '8px',
+                  display: 'inline-flex',
                   alignItems: 'center',
-                  gap: '6px',
+                  gap: '5px',
+                  whiteSpace: 'nowrap',
                   transition: 'var(--transition)',
                   fontWeight: active ? 700 : 600,
-                  textDecoration: 'none'
+                  textDecoration: 'none',
+                  flexShrink: 0
                 }}
               >
-                <span>{link.icon}</span>
+                <span style={{ fontSize: '14px' }}>{link.icon}</span>
                 <span>{link.label}</span>
               </a>
             );
@@ -167,17 +176,19 @@ export default function Navbar({ onOpenAiDoubt, onOpenAiGuru }) {
               style={{
                 color: isActive('#dashboard') ? 'var(--primary)' : 'var(--text-dark)',
                 backgroundColor: isActive('#dashboard') ? 'var(--primary-light)' : 'transparent',
-                padding: '8px 12px',
-                borderRadius: '10px',
-                display: 'flex',
+                padding: '6px 10px',
+                borderRadius: '8px',
+                display: 'inline-flex',
                 alignItems: 'center',
-                gap: '6px',
+                gap: '5px',
+                whiteSpace: 'nowrap',
                 transition: 'var(--transition)',
                 fontWeight: isActive('#dashboard') ? 700 : 600,
-                textDecoration: 'none'
+                textDecoration: 'none',
+                flexShrink: 0
               }}
             >
-              <span>📊</span>
+              <span style={{ fontSize: '14px' }}>📊</span>
               <span>{t('navDashboard')}</span>
             </a>
           )}
