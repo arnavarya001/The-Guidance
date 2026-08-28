@@ -22,11 +22,17 @@ export default function AdminPanel({ settings, onSettingsUpdated }) {
   const [feesList, setFeesList] = useState([]);
   const [feeOverview, setFeeOverview] = useState({ total_students: 0, total_billed: 0, total_collected: 0, total_pending: 0, overdue_count: 0 });
   const [feePayments, setFeePayments] = useState([]);
+  const [selectedStudentForFee, setSelectedStudentForFee] = useState(null);
+  const [editingStudent, setEditingStudent] = useState(null);
   const [feeStudentName, setFeeStudentName] = useState('');
   const [feeClassId, setFeeClassId] = useState('c_10');
   const [feeCourseName, setFeeCourseName] = useState('Class 10 Matriculation Session 2026-27');
   const [feeSemester, setFeeSemester] = useState('Semester 1');
   const [feeTotalAmount, setFeeTotalAmount] = useState('15000');
+  const [feeTuition, setFeeTuition] = useState('10000');
+  const [feeExam, setFeeExam] = useState('2500');
+  const [feeRegistration, setFeeRegistration] = useState('1500');
+  const [feeLibrary, setFeeLibrary] = useState('1000');
   const [feeDueDate, setFeeDueDate] = useState('2026-10-15');
   const [activeReceipt, setActiveReceipt] = useState(null);
   const [isReceiptOpen, setIsReceiptOpen] = useState(false);
@@ -192,7 +198,59 @@ export default function AdminPanel({ settings, onSettingsUpdated }) {
     }
   };
 
-  // Fee Handlers
+  // Fee & Student Handlers
+  const handleSelectStudentForFee = (student) => {
+    setSelectedStudentForFee(student);
+    if (!student) {
+      setFeeStudentName('');
+      return;
+    }
+    const isInter = student.class && (student.class.includes('12') || student.class.includes('11'));
+    setFeeStudentName(student.name);
+    setFeeClassId(student.class || 'c_10');
+    setFeeCourseName(isInter ? 'Class 12 Intermediate (Science Session 2026-27)' : 'Class 10 Matriculation Session 2026-27');
+    setFeeSemester('Semester 1');
+    const existingFee = feesList.find(f => f.user_id === student.id);
+    if (existingFee) {
+      setFeeTotalAmount(String(existingFee.total_amount));
+      setFeeTuition(String(existingFee.breakdown?.tuition_fee || Math.round(existingFee.total_amount * 0.7)));
+      setFeeExam(String(existingFee.breakdown?.exam_fee || Math.round(existingFee.total_amount * 0.15)));
+      setFeeRegistration(String(existingFee.breakdown?.registration_fee || Math.round(existingFee.total_amount * 0.1)));
+      setFeeLibrary(String(existingFee.breakdown?.library_fee || Math.round(existingFee.total_amount * 0.05)));
+      setFeeDueDate(existingFee.due_date || '2026-10-15');
+    } else {
+      const defaultTot = isInter ? 25000 : 15000;
+      setFeeTotalAmount(String(defaultTot));
+      setFeeTuition(String(Math.round(defaultTot * 0.7)));
+      setFeeExam(String(Math.round(defaultTot * 0.15)));
+      setFeeRegistration(String(Math.round(defaultTot * 0.1)));
+      setFeeLibrary(String(Math.round(defaultTot * 0.05)));
+      setFeeDueDate('2026-10-15');
+    }
+  };
+
+  const handleSaveStudentProfile = async (e) => {
+    e.preventDefault();
+    if (!editingStudent) return;
+    setActionLoading(true);
+    try {
+      const res = await fetch(`/api/admin/students/${editingStudent.id}`, {
+        method: 'PUT',
+        headers: authHeaders,
+        body: JSON.stringify(editingStudent)
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Failed to update student profile.');
+      notify('Student profile updated successfully!');
+      setEditingStudent(null);
+      loadAllData();
+    } catch (err) {
+      notify(err.message, true);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const handleAssignFee = async (e) => {
     e.preventDefault();
     if (!feeStudentName || !feeTotalAmount || Number(feeTotalAmount) <= 0) {
@@ -205,18 +263,27 @@ export default function AdminPanel({ settings, onSettingsUpdated }) {
         method: 'POST',
         headers: authHeaders,
         body: JSON.stringify({
+          userId: selectedStudentForFee?.id,
           studentName: feeStudentName.trim(),
+          studentEmail: selectedStudentForFee?.email,
+          enrollmentNo: selectedStudentForFee?.enrollment_no,
           classId: feeClassId,
           courseName: feeCourseName.trim(),
           semester: feeSemester.trim(),
           totalAmount: Number(feeTotalAmount),
-          dueDate: feeDueDate
+          dueDate: feeDueDate,
+          breakdown: {
+            tuition_fee: Number(feeTuition) || Math.round(Number(feeTotalAmount) * 0.7),
+            exam_fee: Number(feeExam) || Math.round(Number(feeTotalAmount) * 0.15),
+            registration_fee: Number(feeRegistration) || Math.round(Number(feeTotalAmount) * 0.1),
+            library_fee: Number(feeLibrary) || Math.round(Number(feeTotalAmount) * 0.05),
+            other_charges: 0
+          }
         })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Failed to assign fee bill.');
-      notify('Fee bill created and assigned successfully!');
-      setFeeStudentName('');
+      notify('Fee bill generated & assigned to ' + feeStudentName + ' successfully!');
       loadAllData();
     } catch (err) {
       notify(err.message, true);
@@ -1419,31 +1486,92 @@ export default function AdminPanel({ settings, onSettingsUpdated }) {
       {/* 7. STUDENT ROSTER */}
       {activeTab === 'students' && (
         <div className="card" style={{ padding: '32px' }}>
-          <h3 style={{ fontSize: '20px', fontWeight: 800, marginBottom: '16px' }}>
-            👥 Registered Student Roster ({students.length})
-          </h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
+            <div>
+              <h3 style={{ fontSize: '20px', fontWeight: 800, margin: 0, color: 'var(--text-dark)' }}>
+                👥 Registered Student Directory ({students.length})
+              </h3>
+              <p style={{ fontSize: '13px', color: 'var(--gray)', margin: '4px 0 0 0' }}>
+                Select any student to view their profile, edit details, or generate and assign custom fee bills.
+              </p>
+            </div>
+          </div>
+
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
               <thead>
                 <tr style={{ borderBottom: '2px solid var(--border)', color: 'var(--gray)' }}>
-                  <th style={{ padding: '12px 14px' }}>Name</th>
+                  <th style={{ padding: '12px 14px' }}>Student Name</th>
+                  <th style={{ padding: '12px 14px' }}>Enrollment ID</th>
                   <th style={{ padding: '12px 14px' }}>Email</th>
                   <th style={{ padding: '12px 14px' }}>Mobile</th>
                   <th style={{ padding: '12px 14px' }}>Class</th>
-                  <th style={{ padding: '12px 14px' }}>Role</th>
+                  <th style={{ padding: '12px 14px' }}>Fee Status</th>
+                  <th style={{ padding: '12px 14px', textAlign: 'right' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {students.map(s => (
                   <tr key={s.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                    <td style={{ padding: '12px 14px', fontWeight: 700 }}>{s.name}</td>
+                    <td style={{ padding: '12px 14px', fontWeight: 700, color: 'var(--text-dark)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div style={{
+                          width: '28px',
+                          height: '28px',
+                          borderRadius: '8px',
+                          background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
+                          color: '#fff',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '12px',
+                          fontWeight: 700
+                        }}>
+                          {s.name.charAt(0).toUpperCase()}
+                        </div>
+                        <span>{s.name}</span>
+                      </div>
+                    </td>
+                    <td style={{ padding: '12px 14px', color: 'var(--gray)' }}>
+                      {s.enrollment_no || `STU-BSEB-2026-${s.id.slice(-4)}`}
+                    </td>
                     <td style={{ padding: '12px 14px' }}>{s.email}</td>
                     <td style={{ padding: '12px 14px' }}>+91 {s.mobile}</td>
-                    <td style={{ padding: '12px 14px' }}>{s.class}</td>
                     <td style={{ padding: '12px 14px' }}>
-                      <span className={`badge ${s.role === 'admin' ? 'badge-primary' : 'badge-secondary'}`}>
-                        {s.role}
+                      <span className="badge badge-primary">{s.class}</span>
+                    </td>
+                    <td style={{ padding: '12px 14px' }}>
+                      <span style={{
+                        backgroundColor: s.fee_status === 'PAID' ? '#ecfdf5' : (s.fee_status === 'PARTIAL' ? '#fef3c7' : '#fee2e2'),
+                        color: s.fee_status === 'PAID' ? '#065f46' : (s.fee_status === 'PARTIAL' ? '#92400e' : '#991b1b'),
+                        padding: '2px 8px',
+                        borderRadius: '6px',
+                        fontSize: '11px',
+                        fontWeight: 700
+                      }}>
+                        {s.fee_status}
                       </span>
+                    </td>
+                    <td style={{ padding: '12px 14px', textAlign: 'right' }}>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                        <button
+                          onClick={() => {
+                            handleSelectStudentForFee(s);
+                            setActiveTab('fees');
+                          }}
+                          className="btn btn-primary btn-sm"
+                          style={{ padding: '5px 12px', fontSize: '12px', fontWeight: 700 }}
+                        >
+                          💳 Manage & Bill Fee
+                        </button>
+                        <button
+                          onClick={() => setEditingStudent({ ...s })}
+                          className="btn btn-outline btn-sm"
+                          style={{ padding: '5px 10px', fontSize: '12px' }}
+                        >
+                          ✏️ Edit
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -1500,34 +1628,128 @@ export default function AdminPanel({ settings, onSettingsUpdated }) {
             </div>
           </div>
 
-          {/* Fee Assigner Form */}
-          <div className="card" style={{ padding: '32px', marginBottom: '32px' }}>
-            <h3 style={{ fontSize: '20px', fontWeight: 800, marginBottom: '20px', color: 'var(--text-dark)' }}>
-              ➕ Create & Assign Fee Bill to Student
-            </h3>
+          {/* Student Picker & Fee Generator Box */}
+          <div className="card" style={{ padding: '32px', marginBottom: '32px', border: '1.5px solid var(--primary)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
+              <div>
+                <h3 style={{ fontSize: '20px', fontWeight: 800, margin: 0, color: 'var(--text-dark)' }}>
+                  👤 Select Registered Student & Generate Fee Bill
+                </h3>
+                <p style={{ fontSize: '13px', color: 'var(--gray)', margin: '4px 0 0 0' }}>
+                  Pick any registered student from the portal to inspect their profile and issue/edit their fee invoice.
+                </p>
+              </div>
+            </div>
+
+            {/* Quick Student Selector Dropdown */}
+            <div className="form-group" style={{ marginBottom: '24px' }}>
+              <label className="form-label" style={{ fontWeight: 700, color: 'var(--primary)' }}>
+                Select Student from Directory:
+              </label>
+              <select
+                value={selectedStudentForFee?.id || ''}
+                onChange={(e) => {
+                  const stu = students.find(s => s.id === e.target.value);
+                  handleSelectStudentForFee(stu);
+                }}
+                className="form-control"
+                style={{ fontSize: '15px', fontWeight: 600, padding: '12px' }}
+              >
+                <option value="">-- Choose a Registered Student --</option>
+                {students.map(s => (
+                  <option key={s.id} value={s.id}>
+                    {s.name} ({s.email || `+91 ${s.mobile}`}) — {s.class} [Status: {s.fee_status}]
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Selected Student Profile Banner */}
+            {selectedStudentForFee && (
+              <div style={{
+                backgroundColor: 'var(--bg-card-hover)',
+                border: '1px solid var(--border)',
+                borderRadius: '16px',
+                padding: '20px',
+                marginBottom: '24px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '16px'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                  <div style={{
+                    width: '52px',
+                    height: '52px',
+                    borderRadius: '12px',
+                    background: 'linear-gradient(135deg, #1e40af, #3b82f6)',
+                    color: '#fff',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '22px',
+                    fontWeight: 800
+                  }}>
+                    {selectedStudentForFee.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <h4 style={{ fontSize: '17px', fontWeight: 800, margin: '0 0 2px 0', color: 'var(--text-dark)' }}>
+                      {selectedStudentForFee.name}
+                    </h4>
+                    <div style={{ fontSize: '12px', color: 'var(--gray)', display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                      <span>🆔 {selectedStudentForFee.enrollment_no || `STU-BSEB-2026-${selectedStudentForFee.id.slice(-4)}`}</span>
+                      <span>✉️ {selectedStudentForFee.email}</span>
+                      <span>📱 +91 {selectedStudentForFee.mobile}</span>
+                      <span>📚 {selectedStudentForFee.class}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ textAlign: 'right' }}>
+                  <span style={{
+                    backgroundColor: selectedStudentForFee.fee_status === 'PAID' ? '#ecfdf5' : '#fef3c7',
+                    color: selectedStudentForFee.fee_status === 'PAID' ? '#065f46' : '#92400e',
+                    padding: '4px 10px',
+                    borderRadius: '6px',
+                    fontSize: '12px',
+                    fontWeight: 700
+                  }}>
+                    {selectedStudentForFee.fee_status}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Fee Bill Generator Form */}
             <form onSubmit={handleAssignFee}>
               <div className="grid-3" style={{ marginBottom: '16px' }}>
                 <div className="form-group">
-                  <label className="form-label">Student Full Name *</label>
+                  <label className="form-label">Student Name *</label>
                   <input
                     type="text"
                     value={feeStudentName}
                     onChange={(e) => setFeeStudentName(e.target.value)}
-                    placeholder="e.g. Priya Sharma"
+                    placeholder="Student Name"
                     required
                     className="form-control"
                   />
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Target Class *</label>
+                  <label className="form-label">Target Class / Stream *</label>
                   <select
                     value={feeClassId}
                     onChange={(e) => {
                       setFeeClassId(e.target.value);
                       const isInter = e.target.value.includes('12') || e.target.value.includes('11');
                       setFeeCourseName(isInter ? 'Class 12 Intermediate (Science Session 2026-27)' : 'Class 10 Matriculation Session 2026-27');
-                      setFeeTotalAmount(isInter ? '25000' : '15000');
+                      const tot = isInter ? 25000 : 15000;
+                      setFeeTotalAmount(String(tot));
+                      setFeeTuition(String(Math.round(tot * 0.7)));
+                      setFeeExam(String(Math.round(tot * 0.15)));
+                      setFeeRegistration(String(Math.round(tot * 0.1)));
+                      setFeeLibrary(String(Math.round(tot * 0.05)));
                     }}
                     className="form-control"
                   >
@@ -1548,7 +1770,7 @@ export default function AdminPanel({ settings, onSettingsUpdated }) {
                 </div>
               </div>
 
-              <div className="grid-3" style={{ marginBottom: '20px' }}>
+              <div className="grid-3" style={{ marginBottom: '16px' }}>
                 <div className="form-group">
                   <label className="form-label">Academic Semester / Term</label>
                   <input
@@ -1564,11 +1786,20 @@ export default function AdminPanel({ settings, onSettingsUpdated }) {
                   <input
                     type="number"
                     value={feeTotalAmount}
-                    onChange={(e) => setFeeTotalAmount(e.target.value)}
+                    onChange={(e) => {
+                      const tot = Number(e.target.value);
+                      setFeeTotalAmount(e.target.value);
+                      if (tot > 0) {
+                        setFeeTuition(String(Math.round(tot * 0.7)));
+                        setFeeExam(String(Math.round(tot * 0.15)));
+                        setFeeRegistration(String(Math.round(tot * 0.1)));
+                        setFeeLibrary(String(Math.round(tot * 0.05)));
+                      }
+                    }}
                     required
                     min={1}
                     className="form-control"
-                    style={{ fontWeight: 700 }}
+                    style={{ fontWeight: 800, fontSize: '16px', color: 'var(--primary)' }}
                   />
                 </div>
 
@@ -1584,14 +1815,81 @@ export default function AdminPanel({ settings, onSettingsUpdated }) {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              {/* Itemized Breakdown Inputs */}
+              <div style={{
+                backgroundColor: 'var(--bg)',
+                padding: '20px',
+                borderRadius: '12px',
+                marginBottom: '24px',
+                border: '1px solid var(--border)'
+              }}>
+                <div style={{ fontSize: '13px', fontWeight: 700, marginBottom: '12px', color: 'var(--text-dark)' }}>
+                  Fee Component Breakdown (Editable by Admin):
+                </div>
+                <div className="grid-4">
+                  <div className="form-group" style={{ margin: 0 }}>
+                    <label className="form-label" style={{ fontSize: '12px' }}>Tuition Fee (₹)</label>
+                    <input
+                      type="number"
+                      value={feeTuition}
+                      onChange={(e) => setFeeTuition(e.target.value)}
+                      className="form-control"
+                    />
+                  </div>
+                  <div className="form-group" style={{ margin: 0 }}>
+                    <label className="form-label" style={{ fontSize: '12px' }}>Exam Fee (₹)</label>
+                    <input
+                      type="number"
+                      value={feeExam}
+                      onChange={(e) => setFeeExam(e.target.value)}
+                      className="form-control"
+                    />
+                  </div>
+                  <div className="form-group" style={{ margin: 0 }}>
+                    <label className="form-label" style={{ fontSize: '12px' }}>Registration Fee (₹)</label>
+                    <input
+                      type="number"
+                      value={feeRegistration}
+                      onChange={(e) => setFeeRegistration(e.target.value)}
+                      className="form-control"
+                    />
+                  </div>
+                  <div className="form-group" style={{ margin: 0 }}>
+                    <label className="form-label" style={{ fontSize: '12px' }}>Library & Portal (₹)</label>
+                    <input
+                      type="number"
+                      value={feeLibrary}
+                      onChange={(e) => setFeeLibrary(e.target.value)}
+                      className="form-control"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+                {selectedStudentForFee && (
+                  <button
+                    type="button"
+                    onClick={() => handleSelectStudentForFee(null)}
+                    className="btn btn-outline"
+                    style={{ padding: '10px 18px' }}
+                  >
+                    Clear Selection
+                  </button>
+                )}
                 <button
                   type="submit"
                   disabled={actionLoading}
                   className="btn btn-primary"
-                  style={{ padding: '10px 24px', fontWeight: 700 }}
+                  style={{
+                    padding: '12px 28px',
+                    fontWeight: 800,
+                    fontSize: '14px',
+                    background: 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)',
+                    boxShadow: '0 4px 14px rgba(37, 99, 235, 0.4)'
+                  }}
                 >
-                  {actionLoading ? 'Assigning Bill...' : 'Assign Fee Bill →'}
+                  {actionLoading ? 'Assigning Bill...' : '💳 Generate & Assign Fee Bill to Student →'}
                 </button>
               </div>
             </form>
@@ -1650,13 +1948,31 @@ export default function AdminPanel({ settings, onSettingsUpdated }) {
                         </span>
                       </td>
                       <td style={{ padding: '12px 14px', textAlign: 'right' }}>
-                        <button
-                          onClick={() => handleDeleteFee(fee.id)}
-                          className="btn btn-outline btn-sm"
-                          style={{ color: 'var(--danger)', padding: '4px 10px', fontSize: '11px' }}
-                        >
-                          🗑️ Delete
-                        </button>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '6px' }}>
+                          <button
+                            onClick={() => {
+                              const stu = students.find(s => s.id === fee.user_id) || {
+                                id: fee.user_id,
+                                name: fee.student_name,
+                                email: fee.student_email,
+                                class: fee.class_id,
+                                enrollment_no: fee.enrollment_no
+                              };
+                              handleSelectStudentForFee(stu);
+                            }}
+                            className="btn btn-outline btn-sm"
+                            style={{ padding: '4px 8px', fontSize: '11px' }}
+                          >
+                            ✏️ Edit Bill
+                          </button>
+                          <button
+                            onClick={() => handleDeleteFee(fee.id)}
+                            className="btn btn-outline btn-sm"
+                            style={{ color: 'var(--danger)', padding: '4px 8px', fontSize: '11px' }}
+                          >
+                            🗑️ Delete
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -1725,6 +2041,104 @@ export default function AdminPanel({ settings, onSettingsUpdated }) {
                 </tbody>
               </table>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Student Profile Modal */}
+      {editingStudent && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.75)',
+          backdropFilter: 'blur(8px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: '20px'
+        }}>
+          <div className="card" style={{ maxWidth: '480px', width: '100%', padding: '32px', borderRadius: '20px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h3 style={{ fontSize: '18px', fontWeight: 800, margin: 0, color: 'var(--text-dark)' }}>
+                ✏️ Edit Student Profile
+              </h3>
+              <button
+                type="button"
+                onClick={() => setEditingStudent(null)}
+                style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: 'var(--gray)' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveStudentProfile}>
+              <div className="form-group" style={{ marginBottom: '16px' }}>
+                <label className="form-label">Full Name</label>
+                <input
+                  type="text"
+                  value={editingStudent.name}
+                  onChange={e => setEditingStudent({ ...editingStudent, name: e.target.value })}
+                  required
+                  className="form-control"
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: '16px' }}>
+                <label className="form-label">Email Address</label>
+                <input
+                  type="email"
+                  value={editingStudent.email}
+                  onChange={e => setEditingStudent({ ...editingStudent, email: e.target.value })}
+                  required
+                  className="form-control"
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: '16px' }}>
+                <label className="form-label">Mobile Number</label>
+                <input
+                  type="tel"
+                  value={editingStudent.mobile}
+                  onChange={e => setEditingStudent({ ...editingStudent, mobile: e.target.value })}
+                  required
+                  className="form-control"
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: '24px' }}>
+                <label className="form-label">Class</label>
+                <select
+                  value={editingStudent.class}
+                  onChange={e => setEditingStudent({ ...editingStudent, class: e.target.value })}
+                  className="form-control"
+                >
+                  {classes.map(c => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                <button
+                  type="button"
+                  onClick={() => setEditingStudent(null)}
+                  className="btn btn-outline"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={actionLoading}
+                  className="btn btn-primary"
+                >
+                  {actionLoading ? 'Saving...' : 'Save Profile Changes'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

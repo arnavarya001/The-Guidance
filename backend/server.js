@@ -1370,19 +1370,64 @@ app.post('/api/admin/ai/compile-test', authenticateAdmin, async (req, res) => {
 app.get('/api/admin/students', authenticateAdmin, async (req, res) => {
   try {
     const users = await db.getCollection('users');
-    const students = users.filter(u => u.role === 'student').map(u => ({
-      id: u.id,
-      name: u.name,
-      email: u.email,
-      mobile: u.mobile,
-      class: u.class,
-      board: u.board,
-      created_at: u.created_at
-    }));
+    const allFees = await db.getCollection('student_fees');
+    
+    const students = users.filter(u => u.role === 'student').map(u => {
+      const studentFee = allFees.find(f => f.user_id === u.id);
+      return {
+        id: u.id,
+        name: u.name,
+        email: u.email,
+        mobile: u.mobile,
+        class: u.class,
+        board: u.board,
+        enrollment_no: studentFee?.enrollment_no || `STU-BSEB-2026-${u.id.slice(-4)}`,
+        fee_status: studentFee?.status || 'NOT_ASSIGNED',
+        total_due: studentFee?.due_amount !== undefined ? studentFee.due_amount : 0,
+        total_paid: studentFee?.paid_amount !== undefined ? studentFee.paid_amount : 0,
+        created_at: u.created_at
+      };
+    });
     res.json(students);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Error retrieving students list.' });
+  }
+});
+
+// Admin: Edit Student Profile
+app.put('/api/admin/students/:id', authenticateAdmin, async (req, res) => {
+  const { id } = req.params;
+  const { name, email, mobile, class: classId, board } = req.body;
+  try {
+    const user = await db.findOne('users', { id });
+    if (!user) return res.status(404).json({ message: 'Student not found.' });
+
+    const updatedUser = await db.update('users', { id }, {
+      name: name ? name.trim() : user.name,
+      email: email ? email.trim() : user.email,
+      mobile: mobile ? mobile.trim() : user.mobile,
+      class: classId || user.class,
+      board: board || user.board,
+      updated_at: new Date().toISOString()
+    });
+
+    // Also sync student_name across fee records
+    if (name) {
+      const allFees = await db.getCollection('student_fees');
+      const studentFee = allFees.find(f => f.user_id === id);
+      if (studentFee) {
+        await db.update('student_fees', { id: studentFee.id }, {
+          student_name: name.trim(),
+          student_email: email ? email.trim() : studentFee.student_email
+        });
+      }
+    }
+
+    res.json({ message: 'Student profile updated successfully!', user: updatedUser });
+  } catch (err) {
+    console.error("Failed to update student:", err);
+    res.status(500).json({ message: 'Failed to update student profile.' });
   }
 });
 
@@ -2027,39 +2072,81 @@ app.get('/api/admin/fees/all', authenticateAdmin, async (req, res) => {
 
 // Admin: Assign / Create Fee Bill
 app.post('/api/admin/fees/assign', authenticateAdmin, async (req, res) => {
-  const { userId, studentName, classId, courseName, semester, totalAmount, dueDate, breakdown } = req.body;
+  const { feeId, userId, studentName, classId, courseName, semester, totalAmount, dueDate, breakdown } = req.body;
   if (!studentName || !totalAmount || Number(totalAmount) <= 0) {
     return res.status(400).json({ message: 'Student Name and Total Amount are required.' });
   }
 
-  const id = 'fee_' + Date.now();
-  const feeRecord = {
-    id,
-    user_id: userId || 'u_student_' + Date.now(),
-    student_name: studentName.trim(),
-    student_email: req.body.studentEmail || `${studentName.toLowerCase().replace(/\s+/g, '')}@theguidance.student`,
-    enrollment_no: `STU-BSEB-2026-${Date.now().toString().slice(-4)}`,
-    class_id: classId || 'c_10',
-    course_name: courseName || 'Bihar Board Academic Session 2026-27',
-    semester: semester || 'Annual Term',
-    department: req.body.department || 'General Secondary',
-    total_amount: Number(totalAmount),
-    paid_amount: 0,
-    due_amount: Number(totalAmount),
-    due_date: dueDate || '2026-10-15',
-    status: 'UNPAID',
-    breakdown: breakdown || {
-      tuition_fee: Math.round(Number(totalAmount) * 0.7),
-      exam_fee: Math.round(Number(totalAmount) * 0.15),
-      registration_fee: Math.round(Number(totalAmount) * 0.1),
-      library_fee: Math.round(Number(totalAmount) * 0.05)
-    },
-    created_at: new Date().toISOString()
-  };
-
   try {
+    const allFees = await db.getCollection('student_fees');
+    const existing = feeId 
+      ? allFees.find(f => f.id === feeId)
+      : (userId ? allFees.find(f => f.user_id === userId) : null);
+
+    const tuition = breakdown?.tuition_fee !== undefined ? Number(breakdown.tuition_fee) : Math.round(Number(totalAmount) * 0.7);
+    const exam = breakdown?.exam_fee !== undefined ? Number(breakdown.exam_fee) : Math.round(Number(totalAmount) * 0.15);
+    const registration = breakdown?.registration_fee !== undefined ? Number(breakdown.registration_fee) : Math.round(Number(totalAmount) * 0.1);
+    const library = breakdown?.library_fee !== undefined ? Number(breakdown.library_fee) : Math.round(Number(totalAmount) * 0.05);
+    const other = breakdown?.other_charges !== undefined ? Number(breakdown.other_charges) : 0;
+
+    if (existing) {
+      const updatedTotal = Number(totalAmount);
+      const paid = Number(existing.paid_amount || 0);
+      const due = Math.max(0, updatedTotal - paid);
+      const status = due === 0 ? 'PAID' : (paid > 0 ? 'PARTIAL' : 'UNPAID');
+
+      const updated = await db.update('student_fees', { id: existing.id }, {
+        student_name: studentName.trim(),
+        student_email: req.body.studentEmail || existing.student_email,
+        class_id: classId || existing.class_id,
+        course_name: courseName || existing.course_name,
+        semester: semester || existing.semester,
+        total_amount: updatedTotal,
+        due_amount: due,
+        status: status,
+        due_date: dueDate || existing.due_date,
+        breakdown: {
+          tuition_fee: tuition,
+          exam_fee: exam,
+          registration_fee: registration,
+          library_fee: library,
+          other_charges: other
+        },
+        updated_at: new Date().toISOString()
+      });
+
+      return res.json({ message: 'Student fee bill updated successfully!', data: updated });
+    }
+
+    const id = 'fee_' + Date.now();
+    const effectiveUserId = userId || 'u_student_' + Date.now();
+    const feeRecord = {
+      id,
+      user_id: effectiveUserId,
+      student_name: studentName.trim(),
+      student_email: req.body.studentEmail || `${studentName.toLowerCase().replace(/\s+/g, '')}@theguidance.student`,
+      enrollment_no: req.body.enrollmentNo || `STU-BSEB-2026-${effectiveUserId.slice(-4)}`,
+      class_id: classId || 'c_10',
+      course_name: courseName || 'Bihar Board Academic Session 2026-27',
+      semester: semester || 'Semester 1',
+      department: req.body.department || 'Senior Secondary Wing',
+      total_amount: Number(totalAmount),
+      paid_amount: 0,
+      due_amount: Number(totalAmount),
+      due_date: dueDate || '2026-10-15',
+      status: 'UNPAID',
+      breakdown: {
+        tuition_fee: tuition,
+        exam_fee: exam,
+        registration_fee: registration,
+        library_fee: library,
+        other_charges: other
+      },
+      created_at: new Date().toISOString()
+    };
+
     await db.insert('student_fees', feeRecord);
-    res.status(201).json({ message: 'Fee bill created and assigned successfully!', data: feeRecord });
+    res.status(201).json({ message: 'Fee bill created and assigned successfully to student!', data: feeRecord });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Failed to assign fee bill.' });
