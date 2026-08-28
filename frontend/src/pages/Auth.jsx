@@ -65,6 +65,18 @@ export default function Auth({ mode = 'login' }) {
       });
   }, []);
 
+  const parseResponse = async (res) => {
+    const text = await res.text();
+    try {
+      return JSON.parse(text);
+    } catch (e) {
+      if (!res.ok) {
+        throw new Error(`Server error (${res.status}): ${res.statusText || 'Please try again in a moment.'}`);
+      }
+      return {};
+    }
+  };
+
   // Handle Standard Email/Password Login
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
@@ -78,7 +90,7 @@ export default function Auth({ mode = 'login' }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email.trim(), password })
       });
-      const data = await res.json();
+      const data = await parseResponse(res);
 
       if (!res.ok) {
         throw new Error(data.message || 'Login failed.');
@@ -116,7 +128,7 @@ export default function Auth({ mode = 'login' }) {
           board: 'Bihar Board'
         })
       });
-      const data = await res.json();
+      const data = await parseResponse(res);
 
       if (!res.ok) {
         throw new Error(data.message || 'Registration failed.');
@@ -152,7 +164,7 @@ export default function Auth({ mode = 'login' }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ mobile: mobile.trim() })
       });
-      const data = await res.json();
+      const data = await parseResponse(res);
 
       if (!res.ok) throw new Error(data.message || 'Failed to send OTP.');
 
@@ -189,7 +201,7 @@ export default function Auth({ mode = 'login' }) {
           classId: classId || 'c_10'
         })
       });
-      const data = await res.json();
+      const data = await parseResponse(res);
 
       if (!res.ok) throw new Error(data.message || 'OTP verification failed.');
 

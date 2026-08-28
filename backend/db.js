@@ -16,29 +16,45 @@ if (supabaseUrl && supabaseKey && !supabaseUrl.includes('your-project-id')) {
   console.log('Using local file database (data/db.json).');
 }
 
-// Local JSON file helpers
+// Local JSON file helpers with memory & /tmp fallback for Serverless / Vercel
+const TMP_DB_FILE = path.join('/tmp', 'guidance_db.json');
+let memoryCache = null;
+
 function readLocalDb() {
+  if (memoryCache) return memoryCache;
   try {
-    if (!fs.existsSync(DB_FILE)) {
-      return {};
+    if (fs.existsSync(TMP_DB_FILE)) {
+      const raw = fs.readFileSync(TMP_DB_FILE, 'utf-8');
+      memoryCache = JSON.parse(raw);
+      return memoryCache;
     }
-    const raw = fs.readFileSync(DB_FILE, 'utf-8');
-    return JSON.parse(raw);
-  } catch (err) {
-    console.error('Error reading local db.json:', err);
+    if (fs.existsSync(DB_FILE)) {
+      const raw = fs.readFileSync(DB_FILE, 'utf-8');
+      memoryCache = JSON.parse(raw);
+      return memoryCache;
+    }
     return {};
+  } catch (err) {
+    console.error('Error reading db.json:', err);
+    return memoryCache || {};
   }
 }
 
 function writeLocalDb(data) {
+  memoryCache = data;
   try {
     const dir = path.dirname(DB_FILE);
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
     fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), 'utf-8');
     return true;
   } catch (err) {
-    console.error('Error writing to db.json:', err);
-    return false;
+    try {
+      fs.writeFileSync(TMP_DB_FILE, JSON.stringify(data, null, 2), 'utf-8');
+      return true;
+    } catch (tmpErr) {
+      console.warn('Persisted to serverless in-memory cache.');
+      return true;
+    }
   }
 }
 
