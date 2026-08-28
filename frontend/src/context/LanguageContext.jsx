@@ -21,6 +21,7 @@ export const TRANSLATIONS = {
     navAdmin: "एडमिन",
     navLogin: "लॉगिन",
     navSignUp: "रजिस्ट्रेशन",
+    navSignup: "रजिस्ट्रेशन",
     navLogout: "लॉगआउट",
     navAiGuru: "AI गुरु",
 
@@ -168,6 +169,7 @@ export const TRANSLATIONS = {
     navAdmin: "Admin",
     navLogin: "Login",
     navSignUp: "Sign Up",
+    navSignup: "Sign Up",
     navLogout: "Logout",
     navAiGuru: "AI Guru",
 
