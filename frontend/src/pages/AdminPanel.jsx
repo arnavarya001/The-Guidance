@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { uploadPdfToFirebase } from '../firebase';
+import ReceiptModal from '../components/ReceiptModal';
 
 export default function AdminPanel({ settings, onSettingsUpdated }) {
   const { user } = useAuth();
@@ -16,6 +17,19 @@ export default function AdminPanel({ settings, onSettingsUpdated }) {
   const [videos, setVideos] = useState([]);
   const [students, setStudents] = useState([]);
   const [attempts, setAttempts] = useState([]);
+
+  // Fee Management State
+  const [feesList, setFeesList] = useState([]);
+  const [feeOverview, setFeeOverview] = useState({ total_students: 0, total_billed: 0, total_collected: 0, total_pending: 0, overdue_count: 0 });
+  const [feePayments, setFeePayments] = useState([]);
+  const [feeStudentName, setFeeStudentName] = useState('');
+  const [feeClassId, setFeeClassId] = useState('c_10');
+  const [feeCourseName, setFeeCourseName] = useState('Class 10 Matriculation Session 2026-27');
+  const [feeSemester, setFeeSemester] = useState('Semester 1');
+  const [feeTotalAmount, setFeeTotalAmount] = useState('15000');
+  const [feeDueDate, setFeeDueDate] = useState('2026-10-15');
+  const [activeReceipt, setActiveReceipt] = useState(null);
+  const [isReceiptOpen, setIsReceiptOpen] = useState(false);
 
   // CMS Settings Form State
   const [cmsForm, setCmsForm] = useState({
@@ -101,14 +115,17 @@ export default function AdminPanel({ settings, onSettingsUpdated }) {
   const loadAllData = async () => {
     setLoading(true);
     try {
-      const [clsRes, qRes, tRes, matRes, vidRes, stuRes, attRes] = await Promise.allSettled([
+      const [clsRes, qRes, tRes, matRes, vidRes, stuRes, attRes, feeOverRes, feeAllRes, feePayRes] = await Promise.allSettled([
         fetch('/api/courses/classes'),
         fetch('/api/questions'),
         fetch('/api/tests'),
         fetch('/api/study-materials'),
         fetch('/api/videos'),
         fetch('/api/admin/students', { headers: authHeaders }),
-        fetch('/api/admin/attempts', { headers: authHeaders })
+        fetch('/api/admin/attempts', { headers: authHeaders }),
+        fetch('/api/admin/fees/overview', { headers: authHeaders }),
+        fetch('/api/admin/fees/all', { headers: authHeaders }),
+        fetch('/api/admin/fees/payments', { headers: authHeaders })
       ]);
 
       if (clsRes.status === 'fulfilled') {
@@ -153,10 +170,85 @@ export default function AdminPanel({ settings, onSettingsUpdated }) {
         const attData = await attRes.value.json();
         if (Array.isArray(attData)) setAttempts(attData);
       }
+
+      if (feeOverRes.status === 'fulfilled') {
+        const feeOver = await feeOverRes.value.json();
+        if (feeOver && typeof feeOver === 'object') setFeeOverview(feeOver);
+      }
+
+      if (feeAllRes.status === 'fulfilled') {
+        const feeAll = await feeAllRes.value.json();
+        if (Array.isArray(feeAll)) setFeesList(feeAll);
+      }
+
+      if (feePayRes.status === 'fulfilled') {
+        const feePays = await feePayRes.value.json();
+        if (Array.isArray(feePays)) setFeePayments(feePays);
+      }
     } catch (err) {
       console.warn('Error loading initial data in Admin:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Fee Handlers
+  const handleAssignFee = async (e) => {
+    e.preventDefault();
+    if (!feeStudentName || !feeTotalAmount || Number(feeTotalAmount) <= 0) {
+      notify('Student Name and positive Total Amount are required.', true);
+      return;
+    }
+    setActionLoading(true);
+    try {
+      const res = await fetch('/api/admin/fees/assign', {
+        method: 'POST',
+        headers: authHeaders,
+        body: JSON.stringify({
+          studentName: feeStudentName.trim(),
+          classId: feeClassId,
+          courseName: feeCourseName.trim(),
+          semester: feeSemester.trim(),
+          totalAmount: Number(feeTotalAmount),
+          dueDate: feeDueDate
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Failed to assign fee bill.');
+      notify('Fee bill created and assigned successfully!');
+      setFeeStudentName('');
+      loadAllData();
+    } catch (err) {
+      notify(err.message, true);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDeleteFee = async (id) => {
+    if (!window.confirm('Delete this fee bill from records?')) return;
+    try {
+      await fetch(`/api/admin/fees/${id}`, { method: 'DELETE', headers: authHeaders });
+      notify('Fee bill deleted.');
+      setFeesList(feesList.filter(f => f.id !== id));
+      loadAllData();
+    } catch (err) {
+      notify('Delete failed.', true);
+    }
+  };
+
+  const handleViewReceipt = async (receiptId) => {
+    try {
+      const res = await fetch(`/api/payments/receipt/${receiptId}`);
+      const data = await res.json();
+      if (res.ok) {
+        setActiveReceipt(data);
+        setIsReceiptOpen(true);
+      } else {
+        notify('Receipt details not found.', true);
+      }
+    } catch (err) {
+      notify('Failed to load receipt.', true);
     }
   };
 
@@ -515,6 +607,7 @@ export default function AdminPanel({ settings, onSettingsUpdated }) {
       <div className="tabs" style={{ marginBottom: '28px', flexWrap: 'wrap', gap: '8px' }}>
         {[
           { id: 'dashboard', label: '📊 Statistics & Overview' },
+          { id: 'fees', label: '💰 Fee & Payment Management' },
           { id: 'cms', label: '🎨 Website Content (CMS)' },
           { id: 'materials', label: '📝 Study Notes & PDFs' },
           { id: 'videos', label: '🎥 Video Lectures' },
@@ -1360,44 +1453,288 @@ export default function AdminPanel({ settings, onSettingsUpdated }) {
         </div>
       )}
 
-      {/* 8. TEST SCORES AUDIT */}
-      {activeTab === 'attempts' && (
-        <div className="card" style={{ padding: '32px' }}>
-          <h3 style={{ fontSize: '20px', fontWeight: 800, marginBottom: '16px' }}>
-            🏆 Student Test Scorecards Audit ({attempts.length})
-          </h3>
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
-              <thead>
-                <tr style={{ borderBottom: '2px solid var(--border)', color: 'var(--gray)' }}>
-                  <th style={{ padding: '12px 14px' }}>Student</th>
-                  <th style={{ padding: '12px 14px' }}>Test Title</th>
-                  <th style={{ padding: '12px 14px' }}>Score</th>
-                  <th style={{ padding: '12px 14px' }}>Percentage</th>
-                  <th style={{ padding: '12px 14px' }}>Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                {attempts.map(att => (
-                  <tr key={att.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                    <td style={{ padding: '12px 14px', fontWeight: 700 }}>{att.student_name}</td>
-                    <td style={{ padding: '12px 14px' }}>{att.test_title}</td>
-                    <td style={{ padding: '12px 14px', fontWeight: 700, color: 'var(--primary)' }}>
-                      {att.score} / {att.total_marks}
-                    </td>
-                    <td style={{ padding: '12px 14px' }}>
-                      {att.percentage ? `${att.percentage}%` : `${Math.round((att.score / (att.total_marks || 1)) * 100)}%`}
-                    </td>
-                    <td style={{ padding: '12px 14px', color: 'var(--gray)' }}>
-                      {att.completed_at ? new Date(att.completed_at).toLocaleDateString() : 'Recent'}
-                    </td>
+      {/* 9. FEE & PAYMENT MANAGEMENT CONSOLE */}
+      {activeTab === 'fees' && (
+        <div>
+          {/* Top Financial KPI Metrics */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+            gap: '20px',
+            marginBottom: '32px'
+          }}>
+            <div className="card" style={{ padding: '24px', borderRadius: '16px' }}>
+              <div style={{ fontSize: '13px', color: 'var(--gray)', fontWeight: 600, marginBottom: '6px' }}>
+                TOTAL FEES BILLED
+              </div>
+              <div style={{ fontSize: '28px', fontWeight: 800, color: 'var(--text-dark)' }}>
+                ₹{Number(feeOverview.total_billed || 0).toLocaleString('en-IN')}
+              </div>
+              <div style={{ fontSize: '12px', color: 'var(--gray)', marginTop: '4px' }}>
+                Across {feeOverview.total_students || feesList.length} Student Accounts
+              </div>
+            </div>
+
+            <div className="card" style={{ padding: '24px', borderRadius: '16px', borderLeft: '4px solid #10b981' }}>
+              <div style={{ fontSize: '13px', color: '#059669', fontWeight: 600, marginBottom: '6px' }}>
+                TOTAL COLLECTED
+              </div>
+              <div style={{ fontSize: '28px', fontWeight: 800, color: '#10b981' }}>
+                ₹{Number(feeOverview.total_collected || 0).toLocaleString('en-IN')}
+              </div>
+              <div style={{ fontSize: '12px', color: 'var(--gray)', marginTop: '4px' }}>
+                {feePayments.length} Online Transactions Verified
+              </div>
+            </div>
+
+            <div className="card" style={{ padding: '24px', borderRadius: '16px', borderLeft: '4px solid #ef4444' }}>
+              <div style={{ fontSize: '13px', color: '#dc2626', fontWeight: 600, marginBottom: '6px' }}>
+                TOTAL OUTSTANDING DUES
+              </div>
+              <div style={{ fontSize: '28px', fontWeight: 800, color: '#ef4444' }}>
+                ₹{Number(feeOverview.total_pending || 0).toLocaleString('en-IN')}
+              </div>
+              <div style={{ fontSize: '12px', color: 'var(--gray)', marginTop: '4px' }}>
+                {feesList.filter(f => f.status === 'UNPAID' || f.status === 'PARTIAL').length} Pending Accounts
+              </div>
+            </div>
+          </div>
+
+          {/* Fee Assigner Form */}
+          <div className="card" style={{ padding: '32px', marginBottom: '32px' }}>
+            <h3 style={{ fontSize: '20px', fontWeight: 800, marginBottom: '20px', color: 'var(--text-dark)' }}>
+              ➕ Create & Assign Fee Bill to Student
+            </h3>
+            <form onSubmit={handleAssignFee}>
+              <div className="grid-3" style={{ marginBottom: '16px' }}>
+                <div className="form-group">
+                  <label className="form-label">Student Full Name *</label>
+                  <input
+                    type="text"
+                    value={feeStudentName}
+                    onChange={(e) => setFeeStudentName(e.target.value)}
+                    placeholder="e.g. Priya Sharma"
+                    required
+                    className="form-control"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Target Class *</label>
+                  <select
+                    value={feeClassId}
+                    onChange={(e) => {
+                      setFeeClassId(e.target.value);
+                      const isInter = e.target.value.includes('12') || e.target.value.includes('11');
+                      setFeeCourseName(isInter ? 'Class 12 Intermediate (Science Session 2026-27)' : 'Class 10 Matriculation Session 2026-27');
+                      setFeeTotalAmount(isInter ? '25000' : '15000');
+                    }}
+                    className="form-control"
+                  >
+                    {classes.map(c => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Course / Program Description</label>
+                  <input
+                    type="text"
+                    value={feeCourseName}
+                    onChange={(e) => setFeeCourseName(e.target.value)}
+                    className="form-control"
+                  />
+                </div>
+              </div>
+
+              <div className="grid-3" style={{ marginBottom: '20px' }}>
+                <div className="form-group">
+                  <label className="form-label">Academic Semester / Term</label>
+                  <input
+                    type="text"
+                    value={feeSemester}
+                    onChange={(e) => setFeeSemester(e.target.value)}
+                    className="form-control"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Total Fee Amount (₹ INR) *</label>
+                  <input
+                    type="number"
+                    value={feeTotalAmount}
+                    onChange={(e) => setFeeTotalAmount(e.target.value)}
+                    required
+                    min={1}
+                    className="form-control"
+                    style={{ fontWeight: 700 }}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Payment Due Date *</label>
+                  <input
+                    type="date"
+                    value={feeDueDate}
+                    onChange={(e) => setFeeDueDate(e.target.value)}
+                    required
+                    className="form-control"
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                <button
+                  type="submit"
+                  disabled={actionLoading}
+                  className="btn btn-primary"
+                  style={{ padding: '10px 24px', fontWeight: 700 }}
+                >
+                  {actionLoading ? 'Assigning Bill...' : 'Assign Fee Bill →'}
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* Student Fee Ledger Table */}
+          <div className="card" style={{ padding: '32px', marginBottom: '32px' }}>
+            <h3 style={{ fontSize: '20px', fontWeight: 800, marginBottom: '20px', color: 'var(--text-dark)' }}>
+              📑 Student Fee Accounts Ledger ({feesList.length})
+            </h3>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid var(--border)', color: 'var(--gray)' }}>
+                    <th style={{ padding: '12px 14px' }}>Student Name</th>
+                    <th style={{ padding: '12px 14px' }}>Enrollment ID</th>
+                    <th style={{ padding: '12px 14px' }}>Course</th>
+                    <th style={{ padding: '12px 14px' }}>Total Fee</th>
+                    <th style={{ padding: '12px 14px' }}>Paid</th>
+                    <th style={{ padding: '12px 14px' }}>Due</th>
+                    <th style={{ padding: '12px 14px' }}>Due Date</th>
+                    <th style={{ padding: '12px 14px' }}>Status</th>
+                    <th style={{ padding: '12px 14px', textAlign: 'right' }}>Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {feesList.map(fee => (
+                    <tr key={fee.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                      <td style={{ padding: '12px 14px', fontWeight: 700, color: 'var(--text-dark)' }}>
+                        {fee.student_name}
+                      </td>
+                      <td style={{ padding: '12px 14px', color: 'var(--gray)' }}>
+                        {fee.enrollment_no || 'STU-BSEB-2026-1088'}
+                      </td>
+                      <td style={{ padding: '12px 14px' }}>{fee.course_name}</td>
+                      <td style={{ padding: '12px 14px', fontWeight: 700 }}>
+                        ₹{Number(fee.total_amount).toLocaleString('en-IN')}
+                      </td>
+                      <td style={{ padding: '12px 14px', color: '#10b981', fontWeight: 700 }}>
+                        ₹{Number(fee.paid_amount || 0).toLocaleString('en-IN')}
+                      </td>
+                      <td style={{ padding: '12px 14px', color: fee.due_amount > 0 ? '#ef4444' : '#10b981', fontWeight: 700 }}>
+                        ₹{Number(fee.due_amount || 0).toLocaleString('en-IN')}
+                      </td>
+                      <td style={{ padding: '12px 14px', color: 'var(--gray)' }}>{fee.due_date}</td>
+                      <td style={{ padding: '12px 14px' }}>
+                        <span style={{
+                          backgroundColor: fee.status === 'PAID' ? '#ecfdf5' : '#fef3c7',
+                          color: fee.status === 'PAID' ? '#065f46' : '#92400e',
+                          padding: '2px 8px',
+                          borderRadius: '6px',
+                          fontSize: '11px',
+                          fontWeight: 700
+                        }}>
+                          {fee.status}
+                        </span>
+                      </td>
+                      <td style={{ padding: '12px 14px', textAlign: 'right' }}>
+                        <button
+                          onClick={() => handleDeleteFee(fee.id)}
+                          className="btn btn-outline btn-sm"
+                          style={{ color: 'var(--danger)', padding: '4px 10px', fontSize: '11px' }}
+                        >
+                          🗑️ Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Verified Payment Transactions Table */}
+          <div className="card" style={{ padding: '32px' }}>
+            <h3 style={{ fontSize: '20px', fontWeight: 800, marginBottom: '20px', color: 'var(--text-dark)' }}>
+              💳 Verified Online Payment Transactions ({feePayments.length})
+            </h3>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid var(--border)', color: 'var(--gray)' }}>
+                    <th style={{ padding: '12px 14px' }}>Receipt No</th>
+                    <th style={{ padding: '12px 14px' }}>Student</th>
+                    <th style={{ padding: '12px 14px' }}>Transaction ID</th>
+                    <th style={{ padding: '12px 14px' }}>Date</th>
+                    <th style={{ padding: '12px 14px' }}>Amount</th>
+                    <th style={{ padding: '12px 14px' }}>Payment Mode</th>
+                    <th style={{ padding: '12px 14px' }}>Status</th>
+                    <th style={{ padding: '12px 14px', textAlign: 'right' }}>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {feePayments.map(p => (
+                    <tr key={p.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                      <td style={{ padding: '12px 14px', fontWeight: 700, color: 'var(--text-dark)' }}>
+                        {p.receipt_id || 'RCP-2026-9811'}
+                      </td>
+                      <td style={{ padding: '12px 14px', fontWeight: 600 }}>{p.student_name}</td>
+                      <td style={{ padding: '12px 14px', color: 'var(--gray)' }}>{p.transaction_id}</td>
+                      <td style={{ padding: '12px 14px', color: 'var(--gray)' }}>
+                        {new Date(p.paid_at).toLocaleDateString('en-IN')}
+                      </td>
+                      <td style={{ padding: '12px 14px', fontWeight: 800, color: '#10b981' }}>
+                        ₹{Number(p.amount).toLocaleString('en-IN')}
+                      </td>
+                      <td style={{ padding: '12px 14px' }}>{p.payment_method}</td>
+                      <td style={{ padding: '12px 14px' }}>
+                        <span style={{
+                          backgroundColor: '#ecfdf5',
+                          color: '#065f46',
+                          padding: '2px 8px',
+                          borderRadius: '6px',
+                          fontSize: '11px',
+                          fontWeight: 700
+                        }}>
+                          VERIFIED
+                        </span>
+                      </td>
+                      <td style={{ padding: '12px 14px', textAlign: 'right' }}>
+                        <button
+                          onClick={() => handleViewReceipt(p.receipt_id)}
+                          className="btn btn-outline btn-sm"
+                          style={{ padding: '4px 10px', fontSize: '11px' }}
+                        >
+                          📄 Receipt
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
+
+      {/* Printable Receipt Modal */}
+      <ReceiptModal
+        receipt={activeReceipt}
+        isOpen={isReceiptOpen}
+        onClose={() => setIsReceiptOpen(false)}
+      />
     </div>
   );
 }

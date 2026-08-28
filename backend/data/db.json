@@ -651,5 +651,87 @@
       "notes_pdf_url": "",
       "description": "Coulomb law, electric field lines, electric dipole and Gauss theorem applications for Inter exam."
     }
+  ],
+  "student_fees": [
+    {
+      "id": "fee_101",
+      "user_id": "u_student1",
+      "student_name": "Aarav Kumar",
+      "student_email": "aarav@gmail.com",
+      "enrollment_no": "STU-BSEB-2026-1042",
+      "class_id": "c_10",
+      "course_name": "Class 10 (Matriculation) - Full Academic Year 2026-27",
+      "semester": "Annual Term 1",
+      "department": "Secondary General Education",
+      "total_amount": 15000,
+      "paid_amount": 5000,
+      "due_amount": 10000,
+      "due_date": "2026-09-15",
+      "status": "PARTIAL",
+      "breakdown": {
+        "tuition_fee": 10000,
+        "exam_fee": 2500,
+        "registration_fee": 1000,
+        "library_fee": 1000,
+        "other_charges": 500
+      },
+      "created_at": "2026-08-01T10:00:00.000Z"
+    },
+    {
+      "id": "fee_102",
+      "user_id": "u_1786378631499",
+      "student_name": "Arnav Arya",
+      "student_email": "singharnav5577@gmail.com",
+      "enrollment_no": "STU-BSEB-2026-1088",
+      "class_id": "c_12_science",
+      "course_name": "Class 12 Intermediate (Science) - Academic Session 2026-27",
+      "semester": "Semester 1 (Physics, Chem, Math, Bio)",
+      "department": "Senior Secondary Science Wing",
+      "total_amount": 25000,
+      "paid_amount": 10000,
+      "due_amount": 15000,
+      "due_date": "2026-09-20",
+      "status": "PARTIAL",
+      "breakdown": {
+        "tuition_fee": 18000,
+        "exam_fee": 3500,
+        "registration_fee": 1500,
+        "library_fee": 1200,
+        "other_charges": 800
+      },
+      "created_at": "2026-08-10T10:00:00.000Z"
+    }
+  ],
+  "payments": [
+    {
+      "id": "pay_1786379901",
+      "fee_id": "fee_102",
+      "user_id": "u_1786378631499",
+      "student_name": "Arnav Arya",
+      "enrollment_no": "STU-BSEB-2026-1088",
+      "course_name": "Class 12 Intermediate (Science)",
+      "amount": 10000,
+      "payment_method": "UPI / Online Gateway",
+      "transaction_id": "TXN_GUIDANCE_20260810_9941",
+      "order_id": "order_guidance_9841",
+      "status": "PAID",
+      "receipt_id": "RCP_2026_0891",
+      "paid_at": "2026-08-10T16:20:00.000Z"
+    },
+    {
+      "id": "pay_1786379902",
+      "fee_id": "fee_101",
+      "user_id": "u_student1",
+      "student_name": "Aarav Kumar",
+      "enrollment_no": "STU-BSEB-2026-1042",
+      "course_name": "Class 10 (Matriculation)",
+      "amount": 5000,
+      "payment_method": "Net Banking",
+      "transaction_id": "TXN_GUIDANCE_20260805_1102",
+      "order_id": "order_guidance_1102",
+      "status": "PAID",
+      "receipt_id": "RCP_2026_0842",
+      "paid_at": "2026-08-05T12:30:00.000Z"
+    }
   ]
 }

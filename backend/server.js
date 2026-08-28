@@ -1796,6 +1796,327 @@ app.get('/api/admin/attempts', authenticateAdmin, async (req, res) => {
   }
 });
 
+// ================= STUDENT FEE & PAYMENT GATEWAY ENDPOINTS =================
+
+// Student: Get my fees ledger and payment history
+app.get('/api/fees/my-fees', authenticateToken, async (req, res) => {
+  try {
+    const studentId = req.user.id;
+    const allFees = await db.getCollection('student_fees');
+    const allPayments = await db.getCollection('payments');
+
+    let myFees = allFees.filter(f => f.user_id === studentId);
+
+    // If student has no fee assigned yet, generate default semester fee bill
+    if (myFees.length === 0) {
+      const isInter = req.user.classId && req.user.classId.includes('12');
+      const defaultFee = {
+        id: 'fee_' + Date.now(),
+        user_id: studentId,
+        student_name: req.user.name,
+        student_email: req.user.email || `${req.user.name.toLowerCase().replace(/\s+/g, '')}@theguidance.student`,
+        enrollment_no: `STU-BSEB-2026-${studentId.slice(-4)}`,
+        class_id: req.user.classId || 'c_10',
+        course_name: isInter ? 'Class 12 Intermediate (Science & Arts)' : 'Class 10 Matriculation Session 2026-27',
+        semester: 'Semester 1',
+        department: isInter ? 'Senior Secondary Wing' : 'Secondary Wing',
+        total_amount: isInter ? 25000 : 15000,
+        paid_amount: 0,
+        due_amount: isInter ? 25000 : 15000,
+        due_date: '2026-09-30',
+        status: 'UNPAID',
+        breakdown: {
+          tuition_fee: isInter ? 18000 : 10000,
+          exam_fee: isInter ? 3500 : 2500,
+          registration_fee: isInter ? 1500 : 1000,
+          library_fee: isInter ? 1200 : 1000,
+          other_charges: isInter ? 800 : 500
+        },
+        created_at: new Date().toISOString()
+      };
+      await db.insert('student_fees', defaultFee);
+      myFees = [defaultFee];
+    }
+
+    const myPayments = allPayments.filter(p => p.user_id === studentId).reverse();
+
+    res.json({
+      fees: myFees,
+      payments: myPayments,
+      summary: {
+        total_billed: myFees.reduce((acc, f) => acc + (Number(f.total_amount) || 0), 0),
+        total_paid: myFees.reduce((acc, f) => acc + (Number(f.paid_amount) || 0), 0),
+        total_due: myFees.reduce((acc, f) => acc + (Number(f.due_amount) || 0), 0)
+      }
+    });
+  } catch (err) {
+    console.error("Error fetching student fees:", err);
+    res.status(500).json({ message: 'Failed to retrieve fee records.' });
+  }
+});
+
+// Student: Create Razorpay / Gateway Order
+app.post('/api/payments/create-order', authenticateToken, async (req, res) => {
+  const { feeId, amount, paymentMethod } = req.body;
+  if (!feeId || !amount || Number(amount) <= 0) {
+    return res.status(400).json({ message: 'Valid Fee ID and payment amount are required.' });
+  }
+
+  try {
+    const fee = await db.findOne('student_fees', { id: feeId });
+    if (!fee) return res.status(404).json({ message: 'Fee record not found.' });
+
+    const orderId = `order_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+    const transactionId = `TXN_GUIDANCE_${Date.now()}`;
+
+    res.json({
+      success: true,
+      order_id: orderId,
+      transaction_id: transactionId,
+      amount: Number(amount),
+      currency: 'INR',
+      key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_guidance_key',
+      fee_id: feeId,
+      student: {
+        name: req.user.name,
+        email: req.user.email || 'student@theguidance.com',
+        contact: req.user.mobile || '9876543210'
+      }
+    });
+  } catch (err) {
+    console.error("Order creation error:", err);
+    res.status(500).json({ message: 'Failed to initialize payment gateway order.' });
+  }
+});
+
+// Student: Verify Payment & Generate Receipt
+app.post('/api/payments/verify-payment', authenticateToken, async (req, res) => {
+  const { feeId, amount, transactionId, orderId, paymentMethod, razorpayPaymentId, razorpaySignature } = req.body;
+
+  if (!feeId || !amount || !transactionId) {
+    return res.status(400).json({ message: 'Incomplete payment payload for server verification.' });
+  }
+
+  try {
+    const fee = await db.findOne('student_fees', { id: feeId });
+    if (!fee) return res.status(404).json({ message: 'Fee record not found.' });
+
+    // Server-side atomic fee ledger balance calculation
+    const payAmount = Number(amount);
+    const updatedPaid = (Number(fee.paid_amount) || 0) + payAmount;
+    const updatedDue = Math.max(0, (Number(fee.total_amount) || 0) - updatedPaid);
+    const newStatus = updatedDue === 0 ? 'PAID' : 'PARTIAL';
+
+    // Update fee record
+    await db.update('student_fees', { id: feeId }, {
+      paid_amount: updatedPaid,
+      due_amount: updatedDue,
+      status: newStatus,
+      updated_at: new Date().toISOString()
+    });
+
+    // Record verified transaction in payments
+    const receiptId = `RCP_${new Date().getFullYear()}_${Date.now().toString().slice(-4)}`;
+    const paymentRecord = {
+      id: 'pay_' + Date.now(),
+      fee_id: feeId,
+      user_id: req.user.id,
+      student_name: fee.student_name || req.user.name,
+      enrollment_no: fee.enrollment_no || `STU-BSEB-2026-${req.user.id.slice(-4)}`,
+      course_name: fee.course_name,
+      amount: payAmount,
+      payment_method: paymentMethod || 'UPI / Online Gateway',
+      transaction_id: transactionId,
+      order_id: orderId || `order_${Date.now()}`,
+      gateway_payment_id: razorpayPaymentId || transactionId,
+      status: 'PAID',
+      receipt_id: receiptId,
+      paid_at: new Date().toISOString()
+    };
+    await db.insert('payments', paymentRecord);
+
+    res.json({
+      success: true,
+      message: 'Payment verified and credited successfully!',
+      payment: paymentRecord,
+      receipt_id: receiptId,
+      updated_fee: {
+        paid_amount: updatedPaid,
+        due_amount: updatedDue,
+        status: newStatus
+      }
+    });
+  } catch (err) {
+    console.error("Payment verification error:", err);
+    res.status(500).json({ message: 'Payment verification failed on server.' });
+  }
+});
+
+// Public / Authenticated: Get Receipt Details
+app.get('/api/payments/receipt/:receiptId', async (req, res) => {
+  const { receiptId } = req.params;
+  try {
+    const payment = await db.findOne('payments', { receipt_id: receiptId });
+    if (!payment) return res.status(404).json({ message: 'Receipt not found.' });
+
+    const fee = await db.findOne('student_fees', { id: payment.fee_id });
+    const siteSettings = await db.getCollection('site_settings');
+    const settingsObj = Array.isArray(siteSettings) ? (siteSettings[0] || {}) : siteSettings;
+
+    res.json({
+      receipt_id: payment.receipt_id,
+      transaction_id: payment.transaction_id,
+      paid_at: payment.paid_at,
+      amount: payment.amount,
+      payment_method: payment.payment_method,
+      student_name: payment.student_name,
+      enrollment_no: payment.enrollment_no,
+      course_name: payment.course_name,
+      semester: fee ? fee.semester : 'Current Semester',
+      status: payment.status,
+      institution: {
+        name: settingsObj.coachingName || 'The Guidance Coaching Institute',
+        address: settingsObj.address || 'Bari Path, Patna, Bihar - 800004',
+        phone: settingsObj.phone || '+91 98765 43210',
+        email: settingsObj.email || 'contact@theguidance.com'
+      }
+    });
+  } catch (err) {
+    console.error("Receipt fetch error:", err);
+    res.status(500).json({ message: 'Failed to fetch receipt.' });
+  }
+});
+
+// ================= ADMIN FEE MANAGEMENT ENDPOINTS =================
+
+// Admin: Financial summary overview
+app.get('/api/admin/fees/overview', authenticateAdmin, async (req, res) => {
+  try {
+    const allFees = await db.getCollection('student_fees');
+    const allPayments = await db.getCollection('payments');
+
+    const totalBilled = allFees.reduce((acc, f) => acc + (Number(f.total_amount) || 0), 0);
+    const totalCollected = allFees.reduce((acc, f) => acc + (Number(f.paid_amount) || 0), 0);
+    const totalPending = allFees.reduce((acc, f) => acc + (Number(f.due_amount) || 0), 0);
+    const overdueCount = allFees.filter(f => f.status === 'UNPAID' || f.status === 'PARTIAL').length;
+
+    res.json({
+      total_students: allFees.length,
+      total_billed: totalBilled,
+      total_collected: totalCollected,
+      total_pending: totalPending,
+      overdue_count: overdueCount,
+      recent_payments_count: allPayments.length
+    });
+  } catch (err) {
+    console.error("Admin fee overview error:", err);
+    res.status(500).json({ message: 'Failed to retrieve fee metrics.' });
+  }
+});
+
+// Admin: Get all student fee records
+app.get('/api/admin/fees/all', authenticateAdmin, async (req, res) => {
+  try {
+    const allFees = await db.getCollection('student_fees');
+    res.json(allFees.reverse());
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Failed to load fee ledger.' });
+  }
+});
+
+// Admin: Assign / Create Fee Bill
+app.post('/api/admin/fees/assign', authenticateAdmin, async (req, res) => {
+  const { userId, studentName, classId, courseName, semester, totalAmount, dueDate, breakdown } = req.body;
+  if (!studentName || !totalAmount || Number(totalAmount) <= 0) {
+    return res.status(400).json({ message: 'Student Name and Total Amount are required.' });
+  }
+
+  const id = 'fee_' + Date.now();
+  const feeRecord = {
+    id,
+    user_id: userId || 'u_student_' + Date.now(),
+    student_name: studentName.trim(),
+    student_email: req.body.studentEmail || `${studentName.toLowerCase().replace(/\s+/g, '')}@theguidance.student`,
+    enrollment_no: `STU-BSEB-2026-${Date.now().toString().slice(-4)}`,
+    class_id: classId || 'c_10',
+    course_name: courseName || 'Bihar Board Academic Session 2026-27',
+    semester: semester || 'Annual Term',
+    department: req.body.department || 'General Secondary',
+    total_amount: Number(totalAmount),
+    paid_amount: 0,
+    due_amount: Number(totalAmount),
+    due_date: dueDate || '2026-10-15',
+    status: 'UNPAID',
+    breakdown: breakdown || {
+      tuition_fee: Math.round(Number(totalAmount) * 0.7),
+      exam_fee: Math.round(Number(totalAmount) * 0.15),
+      registration_fee: Math.round(Number(totalAmount) * 0.1),
+      library_fee: Math.round(Number(totalAmount) * 0.05)
+    },
+    created_at: new Date().toISOString()
+  };
+
+  try {
+    await db.insert('student_fees', feeRecord);
+    res.status(201).json({ message: 'Fee bill created and assigned successfully!', data: feeRecord });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Failed to assign fee bill.' });
+  }
+});
+
+// Admin: Update Fee Bill
+app.put('/api/admin/fees/:id', authenticateAdmin, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const fee = await db.findOne('student_fees', { id });
+    if (!fee) return res.status(404).json({ message: 'Fee not found.' });
+
+    const total = req.body.total_amount !== undefined ? Number(req.body.total_amount) : Number(fee.total_amount);
+    const paid = req.body.paid_amount !== undefined ? Number(req.body.paid_amount) : Number(fee.paid_amount);
+    const due = Math.max(0, total - paid);
+    const status = due === 0 ? 'PAID' : (paid > 0 ? 'PARTIAL' : 'UNPAID');
+
+    const updated = await db.update('student_fees', { id }, {
+      ...req.body,
+      total_amount: total,
+      paid_amount: paid,
+      due_amount: due,
+      status: status,
+      updated_at: new Date().toISOString()
+    });
+
+    res.json({ message: 'Fee record updated successfully!', data: updated });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Failed to update fee record.' });
+  }
+});
+
+// Admin: Delete Fee Bill
+app.delete('/api/admin/fees/:id', authenticateAdmin, async (req, res) => {
+  const { id } = req.params;
+  try {
+    await db.delete('student_fees', { id });
+    res.json({ message: 'Fee bill deleted successfully!' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Failed to delete fee record.' });
+  }
+});
+
+// Admin: All Payment Transactions
+app.get('/api/admin/fees/payments', authenticateAdmin, async (req, res) => {
+  try {
+    const allPayments = await db.getCollection('payments');
+    res.json((allPayments || []).reverse());
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Failed to load payments.' });
+  }
+});
+
 app.get('/', (req, res) => {
   res.send('The Guidance AI API is running.');
 });

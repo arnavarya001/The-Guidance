@@ -96,37 +96,6 @@ export default function Auth({ mode = 'login' }) {
     }
   };
 
-  // Handle Dedicated Admin Login
-  const handleAdminLogin = async (e) => {
-    e.preventDefault();
-    setError('');
-    setSuccess('');
-    setLoading(true);
-
-    try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim(), password })
-      });
-      const data = await res.json();
-
-      if (!res.ok || !data.user || data.user.role !== 'admin') {
-        throw new Error('Access denied. Valid administrator credentials required.');
-      }
-
-      setSuccess('Admin credentials verified! Welcome, ' + data.user.name);
-      setTimeout(() => {
-        login(data.user, data.token);
-        window.location.hash = '#admin';
-      }, 500);
-    } catch (err) {
-      setError(err.message || 'Admin authentication failed.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // Handle Student Registration
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
@@ -366,41 +335,20 @@ export default function Auth({ mode = 'login' }) {
           >
             Sign Up
           </button>
-          <button
-            type="button"
-            onClick={() => { setAuthMode('admin'); setError(''); setSuccess(''); }}
-            style={{
-              flex: 1,
-              padding: '8px 12px',
-              borderRadius: '8px',
-              border: 'none',
-              background: authMode === 'admin' ? 'linear-gradient(135deg, #f59e0b, #d97706)' : 'transparent',
-              color: authMode === 'admin' ? '#ffffff' : 'var(--gray)',
-              fontWeight: authMode === 'admin' ? 700 : 600,
-              fontSize: '13px',
-              cursor: 'pointer',
-              boxShadow: authMode === 'admin' ? 'var(--shadow-sm)' : 'none',
-              transition: 'var(--transition)'
-            }}
-          >
-            👑 Admin
-          </button>
         </div>
 
         {/* Title */}
         <div style={{ textAlign: 'center', marginBottom: '24px' }}>
           <h2 style={{ fontSize: '24px', fontWeight: 800, marginBottom: '6px', color: 'var(--text-dark)' }}>
-            {authMode === 'login' && 'Student Login'}
+            {authMode === 'login' && 'Account Login'}
             {authMode === 'otp' && 'Instant Mobile Sign In'}
             {authMode === 'signup' && 'Create Student Account'}
-            {authMode === 'admin' && 'Administrator Portal'}
             {authMode === 'forgot' && 'Reset Password'}
           </h2>
           <p style={{ color: 'var(--gray)', fontSize: '13px' }}>
             {authMode === 'login' && 'Sign in with your email and password'}
             {authMode === 'otp' && 'Fast and secure OTP verification for Bihar Board students'}
             {authMode === 'signup' && 'Join thousands of students preparing with The Guidance'}
-            {authMode === 'admin' && 'Authorized coaching faculty & administrator login'}
             {authMode === 'forgot' && 'Enter your registered details to set a new password'}
           </p>
         </div>
@@ -666,65 +614,7 @@ export default function Auth({ mode = 'login' }) {
         )}
 
         {/* 4. DEDICATED ADMIN LOGIN FORM */}
-        {authMode === 'admin' && (
-          <form onSubmit={handleAdminLogin}>
-            <div style={{
-              padding: '12px 16px',
-              backgroundColor: 'rgba(245, 158, 11, 0.1)',
-              border: '1px solid rgba(245, 158, 11, 0.3)',
-              borderRadius: '12px',
-              marginBottom: '18px',
-              fontSize: '12px',
-              color: '#92400e'
-            }}>
-              🔒 <strong>Faculty & Admin Only:</strong> Sign in with coaching administrator credentials.
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">Admin Email</label>
-              <input
-                type="email"
-                className="form-control"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                placeholder="admin@theguidance.com"
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">Admin Password</label>
-              <input
-                type="password"
-                className="form-control"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                placeholder="Enter admin password"
-                required
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="btn"
-              style={{
-                width: '100%',
-                padding: '12px',
-                background: 'linear-gradient(135deg, #f59e0b, #d97706)',
-                color: 'white',
-                fontWeight: 700,
-                border: 'none',
-                borderRadius: '12px',
-                boxShadow: '0 4px 12px rgba(245, 158, 11, 0.35)'
-              }}
-            >
-              {loading ? 'Verifying Admin Access...' : '👑 Sign In to Admin Console'}
-            </button>
-          </form>
-        )}
-
-        {/* 5. FORGOT PASSWORD FORM */}
+        {/* 4. FORGOT PASSWORD FORM */}
         {authMode === 'forgot' && (
           <form onSubmit={handleForgotSubmit}>
             <div className="form-group">
